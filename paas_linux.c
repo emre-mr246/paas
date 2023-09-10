@@ -25,6 +25,7 @@ int extract_csrf_token(const char *html_content, char *csrf_token, size_t token_
     return -1;
 }
 
+
 int extract_value(const char* html_content, const char* filter_value_start, const char* filter_value_end, char* value, int token_start_plus) {
     const char *token_start = strstr(html_content, filter_value_start);
     if (token_start) {
@@ -129,6 +130,7 @@ int extract_lab_id(const char *html_content) {
     return -1;
 }
 
+
 int detect_column_count(char *url, char *response_buffer, CURLcode res, CURL *curl, char* comment_sign) {
     int i = 1;
     int max_attempts = 15;
@@ -152,6 +154,7 @@ int detect_column_count(char *url, char *response_buffer, CURLcode res, CURL *cu
     }
     return i;
 }
+
 
 int vulnerabilities(char *url) {
     CURL *curl;
@@ -796,9 +799,6 @@ int vulnerabilities(char *url) {
             }
             printf(password);
         }
-        
-        else if (selected_lab == 12) {}
-        else if (selected_lab == 13) {}
 
         else {
             printf("[!] Invalid input! (error code: 4)\n");
