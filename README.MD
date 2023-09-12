@@ -2,18 +2,17 @@
 #### With this tool, you can solve the labs in PortSwigger Academy with a few commands.
  - For now, PAAS only available for seven categories: Authentication, Directory Traversal, OSCi, Access Control Vulnerabilities, SSRF (Python) and SQLi (C)
  - PAAS is designed for Linux and may not work properly on other operating systems.
- - I'm still developing the tool. More labs will be added in the future.
+ - Burp Suite or any proxy listener (on 127.0.0.1:8080) must be open while the PAAS is running.
+ - I'm preparing for Ecole 42, and since for loops are prohibited there, I use while loops instead.
  
-#### Usage for Python Script
- - [x] Burp Suite or any proxy listener (on 127.0.0.1:8080) must be open while the PAAS is running.
+#### for Python Script
  - [x] Run the tool with the command `./python paas_linux.py`.
  - [x] Type `exit` to exit the tool, and `menu` to return to the main menu.
 
- #### Usage for C Code
- - [x] Burp Suite or any proxy listener (on 127.0.0.1:8080) must be open while the PAAS is running.
+#### for C Code
+ - [x] Run the tool with the command `./paas_linux_c`.
  - [x] You can download the curl library for compile the code with this command: `sudo apt-get install libcurl4-openssl-dev`.
  - [x] For compile the c code, you can do it with the following command: `gcc paas_linux.c -o paas_linux_c -lcurl`.
- - [x] Run the tool with the command `./paas_linux_c`.
  
 #### 10.09.2023 Update Notes
 - [x] SQLi labs added (for the first eleven SQLi lab in the PortSwigger Academy).
