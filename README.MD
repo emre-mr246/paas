@@ -1,6 +1,7 @@
  # [P]ortswigger [A]cademy [A]utomatic [S]olver
 #### With this tool, you can solve the labs in PortSwigger Academy with a few commands.
  - For now, PAAS only available for seven categories: Authentication, Directory Traversal, OSCi, Access Control Vulnerabilities, SSRF (Python) and SQLi (C)
+ - PAAS is designed for Linux and may not work properly on other operating systems.
  - I'm still developing the tool. More labs will be added in the future.
  
 #### Usage for Python Script
