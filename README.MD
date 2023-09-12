@@ -13,7 +13,8 @@
  - [x] Run the tool with the command `./paas_linux_c`.
  - [x] You can download the curl library for compile the code with this command: `sudo apt-get install libcurl4-openssl-dev`.
  - [x] For compile the c code, you can do it with the following command: `gcc paas_linux.c -o paas_linux_c -lcurl`.
- 
+
+
 #### 10.09.2023 Update Notes
 - [x] SQLi labs added (for the first eleven SQLi lab in the PortSwigger Academy).
 - [x] Since Paas is written in C, it can now run faster.
