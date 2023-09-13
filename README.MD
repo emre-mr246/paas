@@ -16,7 +16,7 @@
  - [x] For compile the c code, you can do it with the following command: `gcc paas_linux.c -o paas_linux_c -lcurl`.
 
 #### 13.09.2023 Update Notes (for c code)
-- [x] With binary search, the lab called 'Blind SQL injection with conditional errors' can be solved with approximately 60% fewer requests compared to brute force attacks.
+- [x] With binary search, the lab called 'Blind SQL injection with conditional errors' can be solved with approximately 60% fewer requests compared to normal brute force attacks.
 - [x] Code has been made more secure.
 
 #### 11.09.2023 Update Notes (for c code)
