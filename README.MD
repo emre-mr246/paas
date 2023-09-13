@@ -1,9 +1,10 @@
  # [P]ortswigger [A]cademy [A]utomatic [S]olver
-#### With this tool, you can solve the labs in PortSwigger Academy with a few commands.
- - For now, PAAS only available for seven categories: Authentication, Directory Traversal, OSCi, Access Control Vulnerabilities, SSRF (Python) and SQLi (C)
+#### With this tool, you can easily solve labs in PortSwigger Academy using just a few commands.
+ - PAAS available for seven categories: Authentication, Directory Traversal, OSCi, Access Control Vulnerabilities, SSRF (Python) and SQLi (C)
  - PAAS is designed for Linux and may not work properly on other operating systems.
  - Burp Suite or any proxy listener (on 127.0.0.1:8080) must be open while the PAAS is running.
- - I'm preparing for Ecole 42, and since for loops are prohibited there, I use while loops instead.
+ - You can see requests through the Burp Suite's HTTP history.
+ - I'm preparing for Ecole 42, and since for loops are prohibited there, I use mostly while loops instead.
  
 #### for Python Script
  - [x] Run the tool with the command `./python paas_linux.py`.
@@ -14,13 +15,14 @@
  - [x] You can download the curl library for compile the code with this command: `sudo apt-get install libcurl4-openssl-dev`.
  - [x] For compile the c code, you can do it with the following command: `gcc paas_linux.c -o paas_linux_c -lcurl`.
 
+#### 13.09.2023 Update Notes (for c code)
+- [x] With binary search, the lab called 'Blind SQL injection with conditional errors' can be solved with approximately 60% fewer requests compared to brute force attacks.
+- [x] Code has been made more secure.
 
-#### 10.09.2023 Update Notes
-- [x] SQLi labs added (for the first eleven SQLi lab in the PortSwigger Academy).
+#### 11.09.2023 Update Notes (for c code)
 - [x] Since Paas is written in C, it can now run faster.
 - [x] You only provide the URL to the C code, and it finds the appropriate solution for you and solves the lab.
 
-#### 07.07.2023 Update Notes
-- [x] new labs added.
+#### 07.07.2023 Update Notes (for Python script)
 - [x] some functions have been made asynchronous.
 - [x] with asynchronous attack feature, paas can resolve the "2FA bypass using a brute-force attack" lab 100x faster than PortSwigger Academy's own solution and any other community solutions.
