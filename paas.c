@@ -32,42 +32,37 @@ int extract_lab_id(const char *html_content) {
 
     const char *title_start = "<title>";
     const char *title_end = "</title>";
-
+    const char *start = strstr(html_content, title_start);
+    const char *end = strstr(start, title_end);
     int lab_id = -1;
-    const char *start = html_content;
 
-    while ((start = strstr(html_content, title_start)) != NULL) {
+    if (start != NULL && end != NULL) {
         start += strlen(title_start);
-        const char *end = strstr(start, title_end);
 
-        if (end) {
-            char lab_name[150] = "";
-            size_t lab_name_len = end - start;
+        char lab_name[100] = "";
+        size_t lab_name_len = end - start;
+        if (lab_name_len >= sizeof(lab_name)) {
+            fprintf(stderr, "Lab name is too long! (error code 24)\n");
+            return -1;
+        }
 
-            if (lab_name_len >= sizeof(lab_name)) {
-                fprintf(stderr, "Lab name is too long! (error code 24)\n");
-                return -1;
-            }
+        strncpy(lab_name, start, end - start);
+        lab_name[lab_name_len] = '\0';
 
-            strncpy(lab_name, start, lab_name_len);
-            lab_name[lab_name_len] = '\0';
-
-            for (size_t i = 0; i < sizeof(lab_mappings) / sizeof(lab_mappings[0]); i++) {
-                if (strcmp(lab_name, lab_mappings[i].lab_name) == 0) {
-                    lab_id = lab_mappings[i].lab_id;
-                    return lab_id;
-                }
+        for (size_t i = 0; i < sizeof(lab_mappings) / sizeof(lab_mappings[0]); i++) {
+            if (strcmp(lab_name, lab_mappings[i].lab_name) == 0) {
+                lab_id = lab_mappings[i].lab_id;
+                return lab_id;
             }
         }
-        else
-            break;
     }
 
     return -1;
 }
 
-int performCurlRequest(CURL *curl, char* response_buffer) {
 
+int performCurlRequest(CURL *curl, char* response_buffer) {
+    memset(response_buffer, 0, strlen(response_buffer));
     CURLcode res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
         fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
@@ -84,7 +79,7 @@ size_t write_callback(const char *data, size_t size, size_t count, void *output_
 }
 
 
-static size_t HeaderCallback(const char *data, size_t size, size_t count, void *output_header) {
+static size_t write_header_callback(const char *data, size_t size, size_t count, void *output_header) {
     size_t total_size = size * count;
     strncat(output_header, data, strlen(data));
     return total_size;
@@ -93,26 +88,24 @@ static size_t HeaderCallback(const char *data, size_t size, size_t count, void *
 
 int extract_csrf_token(const char *html_content, char *csrf_token, size_t token_size) {
     const char *token_start = strstr(html_content, "value=\"");
-    if (token_start) {
-        token_start += 7;
-        const char *token_end = strchr(token_start, '"');
-        if (token_end) {
-            size_t token_length = token_end - token_start;
+    const char *token_end = strchr(token_start+7, '\"');
 
-            if (token_length < token_size) {
-                strncpy(csrf_token, token_start, token_length);
-                csrf_token[token_length] = '\0';
-                return 0;
-            } else {
-                fprintf(stderr, "Invalid token size!");
-                return -1;
-            }
-        } else {
-            fprintf(stderr, "Unable to find token end!");
+    if (token_start && token_end) {
+        token_start += 7;
+        size_t token_length = token_end - token_start;
+
+        if (token_length < token_size) {
+            strncpy(csrf_token, token_start, token_length);
+            csrf_token[token_length] = '\0';
+            return 0;
+        }
+        else {
+            fprintf(stderr, "Invalid token size!\n");
             return -1;
         }
-    } else {
-        fprintf(stderr, "Unable to find token start!");
+    }
+    else {
+        fprintf(stderr, "Unable to find token_start or token_end!\nhttps://0ad300150411daef8190205500ff00a3.web-security-academy.net/");
         return -1;
     }
 }
@@ -200,7 +193,6 @@ int detect_column_count(char *url, char *response_buffer, CURL *curl, char* comm
 
 int vulnerabilities(char *url) {
     CURL *curl;
-    CURLcode res;
     curl_global_init(CURL_GLOBAL_DEFAULT);
     char *response_buffer = (char*)calloc(500000, 1);
     char *csrf_token = (char*)calloc(64, sizeof(char));
@@ -686,7 +678,7 @@ int vulnerabilities(char *url) {
             char tracking_id_cookie[100] = "";
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
             curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
-            curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
+            curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, write_header_callback);
             curl_easy_setopt(curl, CURLOPT_HEADERDATA, header);
             curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
@@ -776,7 +768,7 @@ int vulnerabilities(char *url) {
             char tracking_id_cookie[100];
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
             curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
-            curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
+            curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, write_header_callback);
             curl_easy_setopt(curl, CURLOPT_HEADERDATA, header);
             curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
@@ -908,7 +900,7 @@ int vulnerabilities(char *url) {
             char tracking_id_cookie[100] = "";
             curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
             curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "");
-            curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, HeaderCallback);
+            curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, write_header_callback);
             curl_easy_setopt(curl, CURLOPT_HEADERDATA, header);
             curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
