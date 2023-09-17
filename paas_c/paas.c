@@ -64,7 +64,7 @@ int extract_lab_id_from_lab_name(const char *html_content) {
 
 int performCurlRequest(CURL *curl, char* response_buffer, char* header_buffer) {
     memset(response_buffer, 0, strlen(response_buffer) + 1);
-    memset(header_buffer, 0, strlen(response_buffer) + 1);
+    memset(header_buffer, 0, strlen(header_buffer) + 1);
     CURLcode res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
         fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
