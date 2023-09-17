@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <curl/curl.h>
 
+// https://github.com/emre-mr246/paas/
+
 typedef struct {
     const char *lab_name;
     int lab_id;
@@ -560,8 +562,10 @@ int redirect_to_the_solution_and_solve_the_lab(char *url) {
         // Lab name: "Blind SQL injection with conditional responses"
         // clearing the existing cookies for the "trackingId" cookie to be sent by the website
         FILE *cookie_file = fopen("cookiejar.txt", "w");
-        if (cookie_file == NULL)
+        if (cookie_file == NULL) {
             printf("[!] unable to open the \"cookiejar.txt\"! ");
+            return -1;
+        }
         fclose(cookie_file);
 
         performCurlRequest(curl, response_buffer, header_buffer);
