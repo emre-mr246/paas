@@ -1,6 +1,7 @@
  # [P]ortswigger [A]cademy [A]utomatic [S]olver
+- PAAS Python available for seven vulnerability categories: Authentication, Directory Traversal, OSCi, Access Control Vulnerabilities and SSRF.
 
-#### for Python Script
+#### Instructions for Python Script
  - [x] Run the tool with the command `./python paas_linux.py`.
  - [x] Type `exit` to exit the tool, and `menu` to return to the main menu.
 
