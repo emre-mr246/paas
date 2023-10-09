@@ -97,14 +97,6 @@ size_t write_callback(const char *data, size_t size, size_t count)
 size_t write_header_callback(const char *data, size_t size, size_t count) 
 {
     size_t total_size = size * count;
-
-    /*if (*header_buffer == NULL) {
-        *header_buffer = (char *)calloc(total_size + 1, 1);
-        if (*header_buffer == NULL)
-            return -1;
-        (*header_buffer)[0] = '\0';
-    }*/
-
     strncat(header_buffer, data, strlen(data) + 1);
     return total_size;
 }
