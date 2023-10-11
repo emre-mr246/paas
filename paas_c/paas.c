@@ -196,7 +196,7 @@ int determine_column_count(char* comment_sign)
 }
 
 
-int check_is_the_lab_solved()
+int is_the_lab_solved()
 {
     // If the lab has been solved, we make two requests to receive the response "Congratulations, you solved the lab!"
     reset_curl_settings();
@@ -681,7 +681,7 @@ int solve_the_lab(const int lab_to_be_solved)
     }
 
     quit:
-        if(check_is_the_lab_solved() == 0)
+        if(is_the_lab_solved() == 0)
             return 0;
         else
             return -1;
