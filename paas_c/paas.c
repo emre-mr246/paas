@@ -742,7 +742,10 @@ void clear_curl()
 
 void exit_with_error_message(char *message) 
 {
-    printf("%s", message);
+    if(curl != NULL)
+        clear_curl();
+
+    fprintf(stderr, "%s\n", message);
     exit(-1);
 }
 
@@ -765,7 +768,7 @@ int main()
    
     if (solve_the_lab(find_lab_id(html_response)) == 0)
         printf("[+] Lab successfully solved!\n");
-    else 
+    else
         exit_with_error_message("[-] lab solution failed. (something went wront in solve_the_lab())\n");
 
     clear_curl();
