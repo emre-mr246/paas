@@ -5,6 +5,9 @@
  - [x] Run the tool with the command `./python paas_linux.py`.
  - [x] Type `exit` to exit the tool, and `menu` to return to the main menu.
 
+#### 13.10.2023 Update Notes (for Python Script)
+- [x] The code refactored and divided into modules.
+
 #### 18.09.2023 Update Notes (for Python Script)
 - [x] The code has been made more clear and readable.
 
