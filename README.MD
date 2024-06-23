@@ -1,4 +1,4 @@
-NOTE: This project was created at a time when I didn't know much about coding. I'm keeping it for later editing purposes.
+# NOTE: This project was created at a time when I didn't know much about coding. I'm keeping it for later editing purposes.
 
 # [P]ortswigger [A]cademy [A]utomatic [S]olver
 #### With this tool, you can easily solve labs in PortSwigger Academy using just a few commands.
